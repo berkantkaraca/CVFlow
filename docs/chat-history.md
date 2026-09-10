@@ -312,7 +312,7 @@ SaaS
 ________________________________________
 11. Ben olsam MVP'yi böyle sınırlarım
 İlk versiyonda:
-                    CV SaaS
+                    CVFlow
                        │
         ┌──────────────┼──────────────┐
         ↓              ↓              ↓
@@ -467,7 +467,7 @@ MASTER PROMPT
 Yani evet, master prompt aşamasına geldik. Bundan sonra yaptığımız her teknik karar doğrudan prompta girebilir.
 evet yaz
 Evet. Aşağıdaki promptu AI coding agent'a doğrudan verebileceğin master prompt olarak hazırladım. Agent'ın projeyi sıfırdan oluşturmasını, belirlediğimiz mimariye uymasını ve kendi kafasına göre teknoloji/mimari değiştirmemesini özellikle belirttim.
-CV SaaS — Master Coding Agent Prompt
+CVFlow — Master Coding Agent Prompt
 1. ROLE
 You are a senior full-stack software engineer responsible for implementing a production-quality SaaS application.
 You must:
@@ -596,7 +596,7 @@ Do not persist generated PDF files in PostgreSQL in MVP.
 ________________________________________
 6. REPOSITORY STRUCTURE
 Use a monorepo:
-cv-saas/
+cvflow/
 │
 ├── backend/
 │   ├── pom.xml
@@ -1689,7 +1689,7 @@ services:
 
   postgres:
     image: postgres:17
-    container_name: cv-saas-postgres
+    container_name: cvflow-postgres
     environment:
       POSTGRES_DB: cv_saas
       POSTGRES_USER: postgres
@@ -1706,7 +1706,7 @@ ________________________________________
 Default:
 spring:
   application:
-    name: cv-saas-backend
+    name: cvflow-backend
 
   datasource:
     url: jdbc:postgresql://localhost:5432/cv_saas

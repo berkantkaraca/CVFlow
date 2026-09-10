@@ -1,4 +1,4 @@
-# CV SaaS — Master Coding Agent Prompt
+# CVFlow — Master Coding Agent Prompt
 
 ## 1. ROLE
 
@@ -207,7 +207,7 @@ Do not persist generated PDF files in PostgreSQL in MVP.
 Use a monorepo:
 
 ```text
-cv-saas/
+cvflow/
 │
 ├── backend/
 │   ├── pom.xml
@@ -2039,7 +2039,7 @@ services:
 
   postgres:
     image: postgres:17
-    container_name: cv-saas-postgres
+    container_name: cvflow-postgres
     environment:
       POSTGRES_DB: cv_saas
       POSTGRES_USER: postgres
@@ -2064,7 +2064,7 @@ Default:
 ```yaml
 spring:
   application:
-    name: cv-saas-backend
+    name: cvflow-backend
 
   datasource:
     url: jdbc:postgresql://localhost:5432/cv_saas
