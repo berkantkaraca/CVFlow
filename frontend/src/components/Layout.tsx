@@ -1,4 +1,5 @@
-import { Link, Outlet, useLocation } from 'react-router'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router'
+import { useLogout, useSession } from '../features/auth/authApi'
 import { useUiStore } from '../stores/uiStore'
 
 function navClass(active: boolean): string {
@@ -9,8 +10,12 @@ function navClass(active: boolean): string {
 
 export function Layout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const toasts = useUiStore((s) => s.toasts)
   const dismiss = useUiStore((s) => s.dismiss)
+  const email = useSession((s) => s.email)
+  const logout = useLogout()
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -18,14 +23,38 @@ export function Layout() {
           <Link to="/" className="text-lg font-bold tracking-tight">
             CVFlow
           </Link>
-          <nav className="flex gap-1">
-            <Link to="/" className={navClass(location.pathname === '/')}>
-              Dashboard
-            </Link>
-            <Link to="/cvs" className={navClass(location.pathname.startsWith('/cvs'))}>
-              CVs
-            </Link>
-          </nav>
+          {!isAuthPage && (
+            <nav className="flex gap-1">
+              <Link to="/" className={navClass(location.pathname === '/')}>
+                Dashboard
+              </Link>
+              <Link to="/cvs" className={navClass(location.pathname.startsWith('/cvs'))}>
+                CVs
+              </Link>
+            </nav>
+          )}
+          <div className="ml-auto flex items-center gap-3 text-sm">
+            {email ? (
+              <>
+                <span className="text-slate-500">{email}</span>
+                <button
+                  onClick={() => {
+                    logout()
+                    navigate('/login')
+                  }}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              !isAuthPage && (
+                <Link to="/login" className="font-medium text-blue-700 hover:underline">
+                  Log in
+                </Link>
+              )
+            )}
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6">

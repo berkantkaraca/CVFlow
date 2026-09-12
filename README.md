@@ -58,6 +58,7 @@ PDF: server-rendered HTML/CSS → Chromium (Gotenberg service) → PDF bytes.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `GEMINI_API_KEY` | for AI | empty | Google Gemini API key |
+| `JWT_SECRET` | yes (prod) | dev-only default | HS256 signing secret, min 32 chars |
 | `PDF_GOTENBERG_URL` | no | `http://localhost:3000` | Gotenberg/Chromium endpoint |
 
 See `.env.example`. Never commit `.env` or keys.
@@ -104,8 +105,10 @@ Hibernate `ddl-auto: validate` — schema changes only via Flyway.
 Tables: `users`, `master_cvs` (JSONB `content` + `section_order`), `cv_language_versions`
 (UNIQUE per master+language), `cv_ai_suggestions`.
 
-A demo user is seeded by migration V1 (`demo@cvsaas.local`); authentication is mocked
-(`CurrentUserService`) and ownership is enforced on every operation.
+A demo user is seeded by migration V1 (`demo@cvsaas.local`, no password — cannot log in).
+Register via `POST /api/v1/auth/register`, then log in via `POST /api/v1/auth/login`.
+The frontend stores the JWT in localStorage and sends it as `Authorization: Bearer`.
+Every CV/language/suggestion operation checks ownership; cross-user access returns 403.
 
 ## API overview
 
@@ -113,9 +116,11 @@ All JSON responses use `{ success, data, error: { code, message, details }, time
 except the binary PDF export.
 
 ```text
+POST   /api/v1/auth/register                register (email + password, returns JWT)
+POST   /api/v1/auth/login                   login (returns JWT)
+
 GET    /api/v1/cvs                          list Master CVs
-POST   /api/v1/cvs                          create (empty content + default order)
-GET    /api/v1/cvs/{cvId}                   get
+POST   /api/v1/cvs                          create (empty content + default order)GET    /api/v1/cvs/{cvId}                   get
 PUT    /api/v1/cvs/{cvId}                   update (optimistic locking via version → 409)
 DELETE /api/v1/cvs/{cvId}                   delete
 POST   /api/v1/cvs/{cvId}/duplicate         deep-copy CV + language versions

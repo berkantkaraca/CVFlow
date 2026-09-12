@@ -24,6 +24,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
