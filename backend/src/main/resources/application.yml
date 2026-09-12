@@ -32,3 +32,6 @@ app:
       api-key: ${GEMINI_API_KEY:}
       model: gemini-2.5-flash
       base-url: https://generativelanguage.googleapis.com
+  pdf:
+    gotenberg:
+      base-url: ${PDF_GOTENBERG_URL:http://localhost:3000}

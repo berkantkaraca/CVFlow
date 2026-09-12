@@ -12,5 +12,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: cvflow-gotenberg
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
