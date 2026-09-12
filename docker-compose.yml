@@ -22,5 +22,28 @@ services:
       - "3000:3000"
     restart: unless-stopped
 
+  backend:
+    build: ./backend
+    container_name: cvflow-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cv_saas
+      PDF_GOTENBERG_URL: http://gotenberg:3000
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - postgres
+      - gotenberg
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: cvflow-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 volumes:
   postgres_data:

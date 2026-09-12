@@ -21,7 +21,7 @@ export function CvEditorPage() {
   const { cvId = '' } = useParams()
   const navigate = useNavigate()
   const notify = useUiStore((s) => s.notify)
-  const { data: cv, isLoading, refetch } = useCv(cvId)
+  const { data: cv, isLoading, isError, refetch } = useCv(cvId)
   const updateCv = useUpdateCv(cvId)
   const { data: languages } = useLanguages(cvId)
   const createLanguage = useCreateLanguage(cvId)
@@ -60,7 +60,15 @@ export function CvEditorPage() {
   }
 
   if (isLoading) return <p>Loading…</p>
-  if (!cv) return <p>CV not found.</p>
+  if (isError || !cv)
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
+        <p className="font-medium text-red-700">Could not load this CV.</p>
+        <button onClick={() => void refetch()} className="mt-2 rounded bg-red-600 px-3 py-1 text-white">
+          Retry
+        </button>
+      </div>
+    )
 
   return (
     <div className="flex flex-col gap-4">

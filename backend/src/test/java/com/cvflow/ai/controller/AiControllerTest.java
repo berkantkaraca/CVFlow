@@ -118,6 +118,13 @@ class AiControllerTest {
                 .andExpect(jsonPath("$.success").value(true));
     }
 
+    @Test
+    void listRequiresLanguageVersionId() throws Exception {
+        mvc.perform(get("/api/v1/ai/suggestions"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("INVALID_REQUEST"));
+    }
+
     private AiSuggestionResponse sample() {
         return new AiSuggestionResponse(
                 suggestionId,

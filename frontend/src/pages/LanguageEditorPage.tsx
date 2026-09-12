@@ -11,7 +11,7 @@ import type { TemplateCode } from '../types/cv'
 export function LanguageEditorPage() {
   const { cvId = '', languageId = '' } = useParams()
   const notify = useUiStore((s) => s.notify)
-  const { data: language, isLoading, refetch } = useLanguage(cvId, languageId)
+  const { data: language, isLoading, isError, refetch } = useLanguage(cvId, languageId)
   const { data: languages, refetch: refetchLanguages } = useLanguages(cvId)
   const updateLanguage = useUpdateLanguage(cvId, languageId)
   const [exporting, setExporting] = useState(false)
@@ -48,7 +48,15 @@ export function LanguageEditorPage() {
   }
 
   if (isLoading) return <p>Loading…</p>
-  if (!language) return <p>Language version not found.</p>
+  if (isError || !language)
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
+        <p className="font-medium text-red-700">Could not load this language version.</p>
+        <button onClick={() => void refetch()} className="mt-2 rounded bg-red-600 px-3 py-1 text-white">
+          Retry
+        </button>
+      </div>
+    )
 
   return (
     <div className="flex flex-col gap-4">

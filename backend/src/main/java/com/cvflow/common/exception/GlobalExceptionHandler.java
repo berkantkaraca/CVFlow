@@ -43,6 +43,22 @@ public class GlobalExceptionHandler {
                 .body(ApiResponses.error("INVALID_REQUEST", "Invalid request parameter", null));
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(
+            org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        Map<String, String> details = new HashMap<>();
+        details.put(ex.getParameterName(), "required request parameter is missing");
+        return ResponseEntity.badRequest()
+                .body(ApiResponses.error("INVALID_REQUEST", "Missing request parameter", details));
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResource(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponses.error("NOT_FOUND", "Resource not found", null));
+    }
+
     @ExceptionHandler({ObjectOptimisticLockingFailureException.class,
             jakarta.persistence.OptimisticLockException.class})
     public ResponseEntity<ApiResponse<Void>> handleJpaOptimisticLock(RuntimeException ex) {
