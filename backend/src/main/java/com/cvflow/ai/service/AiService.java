@@ -1,0 +1,113 @@
+package com.cvflow.ai.service;
+
+import com.cvflow.ai.client.AiClient;
+import com.cvflow.ai.dto.AiSuggestionResponse;
+import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.entity.CvAiSuggestion;
+import com.cvflow.ai.mapper.AiSuggestionMapper;
+import com.cvflow.ai.model.AiOperation;
+import com.cvflow.ai.model.AiSuggestionPayload;
+import com.cvflow.ai.model.AiSuggestionStatus;
+import com.cvflow.ai.repository.CvAiSuggestionRepository;
+import com.cvflow.common.exception.InvalidSuggestionStateException;
+import com.cvflow.common.exception.SuggestionNotFoundException;
+import com.cvflow.common.security.CvAccessService;
+import com.cvflow.cv.entity.CvLanguageVersion;
+import com.cvflow.cv.repository.CvLanguageVersionRepository;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class AiService {
+    private final AiClient aiClient;
+    private final CvAiSuggestionRepository suggestionRepository;
+    private final CvLanguageVersionRepository languageVersionRepository;
+    private final CvAccessService cvAccessService;
+    private final CvFieldValidator fieldValidator;
+    private final SuggestionApplier applier;
+
+    public AiService(
+            AiClient aiClient,
+            CvAiSuggestionRepository suggestionRepository,
+            CvLanguageVersionRepository languageVersionRepository,
+            CvAccessService cvAccessService,
+            CvFieldValidator fieldValidator,
+            SuggestionApplier applier) {
+        this.aiClient = aiClient;
+        this.suggestionRepository = suggestionRepository;
+        this.languageVersionRepository = languageVersionRepository;
+        this.cvAccessService = cvAccessService;
+        this.fieldValidator = fieldValidator;
+        this.applier = applier;
+    }
+
+    @Transactional
+    public AiSuggestionResponse improve(ImproveRequest request) {
+        CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
+        fieldValidator.validate(request.section(), request.entityId(), request.field());
+        String suggested = aiClient.improve(request.content());
+        return saveSuggestion(version.getId(), AiOperation.IMPROVE, request, suggested);
+    }
+
+    @Transactional
+    public AiSuggestionResponse rewrite(ImproveRequest request) {
+        CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
+        fieldValidator.validate(request.section(), request.entityId(), request.field());
+        String suggested = aiClient.rewrite(request.content());
+        return saveSuggestion(version.getId(), AiOperation.REWRITE, request, suggested);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AiSuggestionResponse> list(UUID languageVersionId, AiSuggestionStatus status) {
+        CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(languageVersionId);
+        List<CvAiSuggestion> suggestions = status == null
+                ? suggestionRepository.findAllByLanguageVersionId(version.getId())
+                : suggestionRepository.findAllByLanguageVersionIdAndStatus(version.getId(), status);
+        return suggestions.stream().map(AiSuggestionMapper::toResponse).toList();
+    }
+
+    @Transactional
+    public AiSuggestionResponse accept(UUID suggestionId) {
+        CvAiSuggestion suggestion = loadOwned(suggestionId);
+        requirePending(suggestion);
+        CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(suggestion.getLanguageVersionId());
+        applier.apply(version.getContent(), suggestion.getPayload());
+        languageVersionRepository.saveAndFlush(version);
+        suggestion.setStatus(AiSuggestionStatus.ACCEPTED);
+        return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+    }
+
+    @Transactional
+    public AiSuggestionResponse reject(UUID suggestionId) {
+        CvAiSuggestion suggestion = loadOwned(suggestionId);
+        requirePending(suggestion);
+        suggestion.setStatus(AiSuggestionStatus.REJECTED);
+        return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+    }
+
+    private CvAiSuggestion loadOwned(UUID suggestionId) {
+        CvAiSuggestion suggestion =
+                suggestionRepository.findById(suggestionId).orElseThrow(SuggestionNotFoundException::new);
+        cvAccessService.getOwnedLanguageVersion(suggestion.getLanguageVersionId());
+        return suggestion;
+    }
+
+    private void requirePending(CvAiSuggestion suggestion) {
+        if (suggestion.getStatus() != AiSuggestionStatus.PENDING) {
+            throw new InvalidSuggestionStateException();
+        }
+    }
+
+    private AiSuggestionResponse saveSuggestion(
+            UUID languageVersionId, AiOperation operation, ImproveRequest request, String suggested) {
+        CvAiSuggestion suggestion = new CvAiSuggestion();
+        suggestion.setLanguageVersionId(languageVersionId);
+        suggestion.setOperation(operation);
+        suggestion.setStatus(AiSuggestionStatus.PENDING);
+        suggestion.setPayload(new AiSuggestionPayload(
+                request.section(), request.entityId(), request.field(), request.content(), suggested));
+        return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+    }
+}

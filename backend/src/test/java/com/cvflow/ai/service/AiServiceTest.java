@@ -1,0 +1,181 @@
+package com.cvflow.ai.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.cvflow.ai.client.AiClient;
+import com.cvflow.ai.dto.AiSuggestionResponse;
+import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.entity.CvAiSuggestion;
+import com.cvflow.ai.model.AiOperation;
+import com.cvflow.ai.model.AiSuggestionPayload;
+import com.cvflow.ai.model.AiSuggestionStatus;
+import com.cvflow.ai.repository.CvAiSuggestionRepository;
+import com.cvflow.common.exception.AccessDeniedException;
+import com.cvflow.common.exception.InvalidFieldException;
+import com.cvflow.common.exception.InvalidSuggestionStateException;
+import com.cvflow.common.exception.SuggestionNotFoundException;
+import com.cvflow.common.security.CvAccessService;
+import com.cvflow.cv.entity.CvLanguageVersion;
+import com.cvflow.cv.model.CvContent;
+import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.model.Experience;
+import com.cvflow.cv.model.LanguageCode;
+import com.cvflow.cv.model.TemplateCode;
+import com.cvflow.cv.repository.CvLanguageVersionRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class AiServiceTest {
+
+    @Mock
+    private AiClient aiClient;
+
+    @Mock
+    private CvAiSuggestionRepository suggestionRepository;
+
+    @Mock
+    private CvLanguageVersionRepository languageVersionRepository;
+
+    @Mock
+    private CvAccessService cvAccessService;
+
+    private AiService service;
+    private final UUID versionId = UUID.randomUUID();
+    private final UUID suggestionId = UUID.randomUUID();
+    private final UUID experienceId = UUID.randomUUID();
+
+    @BeforeEach
+    void setup() {
+        service = new AiService(
+                aiClient,
+                suggestionRepository,
+                languageVersionRepository,
+                cvAccessService,
+                new CvFieldValidator(),
+                new SuggestionApplier());
+    }
+
+    @Test
+    void improveCreatesPendingSuggestionWithoutMutatingContent() {
+        CvLanguageVersion version = languageVersion();
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(version);
+        when(aiClient.improve("Did stuff")).thenReturn("Did great stuff");
+        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        AiSuggestionResponse response = service.improve(improveRequest());
+
+        assertEquals(AiOperation.IMPROVE, response.operation());
+        assertEquals(AiSuggestionStatus.PENDING, response.status());
+        assertEquals("Did great stuff", response.payload().getSuggested());
+        assertEquals("Did stuff", response.payload().getOriginal());
+        verify(languageVersionRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void improveRejectsDisallowedField() {
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(languageVersion());
+
+        ImproveRequest request =
+                new ImproveRequest(versionId, CvSection.EXPERIENCE, experienceId, "salary", "x");
+
+        assertThrows(InvalidFieldException.class, () -> service.improve(request));
+    }
+
+    @Test
+    void improvePropagatesAccessDenied() {
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenThrow(new AccessDeniedException());
+
+        assertThrows(AccessDeniedException.class, () -> service.improve(improveRequest()));
+    }
+
+    @Test
+    void acceptAppliesSuggestionAndMarksAccepted() {
+        CvLanguageVersion version = languageVersion();
+        CvAiSuggestion suggestion = suggestion(AiSuggestionStatus.PENDING);
+        when(suggestionRepository.findById(suggestionId)).thenReturn(Optional.of(suggestion));
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(version);
+        when(languageVersionRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        AiSuggestionResponse response = service.accept(suggestionId);
+
+        assertEquals(AiSuggestionStatus.ACCEPTED, response.status());
+        assertEquals(List.of("Did great stuff"), version.getContent().getExperiences().get(0).getDescription());
+    }
+
+    @Test
+    void acceptRejectsNonPending() {
+        when(suggestionRepository.findById(suggestionId))
+                .thenReturn(Optional.of(suggestion(AiSuggestionStatus.ACCEPTED)));
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(languageVersion());
+
+        assertThrows(InvalidSuggestionStateException.class, () -> service.accept(suggestionId));
+    }
+
+    @Test
+    void rejectMarksRejectedWithoutTouchingContent() {
+        CvAiSuggestion suggestion = suggestion(AiSuggestionStatus.PENDING);
+        when(suggestionRepository.findById(suggestionId)).thenReturn(Optional.of(suggestion));
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(languageVersion());
+        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        AiSuggestionResponse response = service.reject(suggestionId);
+
+        assertEquals(AiSuggestionStatus.REJECTED, response.status());
+        verify(languageVersionRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void acceptThrowsWhenMissing() {
+        when(suggestionRepository.findById(suggestionId)).thenReturn(Optional.empty());
+
+        assertThrows(SuggestionNotFoundException.class, () -> service.accept(suggestionId));
+    }
+
+    private ImproveRequest improveRequest() {
+        return new ImproveRequest(versionId, CvSection.EXPERIENCE, experienceId, "description", "Did stuff");
+    }
+
+    private CvLanguageVersion languageVersion() {
+        CvContent content = CvContent.empty();
+        Experience experience = new Experience();
+        experience.setId(experienceId);
+        experience.setCompany("Acme");
+        experience.setDescription(new ArrayList<>(List.of("Did stuff")));
+        content.setExperiences(new ArrayList<>(List.of(experience)));
+        CvLanguageVersion version = new CvLanguageVersion();
+        version.setId(versionId);
+        version.setMasterCvId(UUID.randomUUID());
+        version.setLanguageCode(LanguageCode.EN);
+        version.setName("English");
+        version.setTemplateCode(TemplateCode.MODERN);
+        version.setContent(content);
+        version.setSectionOrder(CvSection.defaultOrder());
+        version.setVersion(0L);
+        return version;
+    }
+
+    private CvAiSuggestion suggestion(AiSuggestionStatus status) {
+        CvAiSuggestion suggestion = new CvAiSuggestion();
+        suggestion.setId(suggestionId);
+        suggestion.setLanguageVersionId(versionId);
+        suggestion.setOperation(AiOperation.IMPROVE);
+        suggestion.setStatus(status);
+        suggestion.setPayload(new AiSuggestionPayload(
+                CvSection.EXPERIENCE, experienceId, "description", "Did stuff", "Did great stuff"));
+        return suggestion;
+    }
+}
