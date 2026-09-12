@@ -41,7 +41,13 @@ PDF: server-rendered HTML/CSS → Chromium (Gotenberg service) → PDF bytes.
 
 ## Requirements
 
-- JDK 25+ to build the backend (tested with JDK 26, `--release 25`)
+- JDK 25+ to build the backend (tested with JDK 26, `--release 25`).
+  Maven **must** run on JDK 25+. If `mvn -version` shows an older Java (e.g. an IDE-bundled
+  JRE), set `JAVA_HOME` to a JDK 25+ installation before running Maven:
+  ```powershell
+  $env:JAVA_HOME = 'C:\Program Files\Java\jdk-26.0.1'
+  ```
+  For a permanent fix, set the `JAVA_HOME` system/user environment variable to your JDK.
 - Maven 3.9+
 - Node 24+ / npm (frontend)
 - Docker + Docker Compose (PostgreSQL, Gotenberg, optional full stack)
@@ -67,7 +73,7 @@ cd backend
 mvn spring-boot:run
 
 # 3. Frontend (http://localhost:5173, /api proxied to :8080)
-cd frontend
+cd ../frontend
 npm install
 npm run dev
 ```
@@ -149,10 +155,18 @@ Conversion needs Chromium: `docker compose up -d gotenberg`
 ## Testing
 
 ```bash
-cd backend && mvn test     # unit + service + Testcontainers integration (87 tests)
+cd backend && mvn test     # unit + service + Testcontainers integration (88 tests)
 cd frontend && npm test    # vitest
 cd frontend && npm run build
 ```
+
+## Troubleshooting
+
+- `UnsupportedClassVersionError ... class file version 69.0 ... up to 65.0`:
+  Maven is running on an old Java (e.g. Java 21). Point `JAVA_HOME` at a JDK 25+
+  (see Requirements) and retry in a new terminal.
+- `cd frontend` fails with path not found: run it from the repo root
+  (`cd ..\frontend` if you are inside `backend/`).
 
 ## Project structure
 
