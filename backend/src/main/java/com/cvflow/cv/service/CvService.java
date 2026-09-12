@@ -1,0 +1,102 @@
+package com.cvflow.cv.service;
+
+import com.cvflow.common.exception.InvalidSectionOrderException;
+import com.cvflow.common.exception.OptimisticLockException;
+import com.cvflow.common.security.CvAccessService;
+import com.cvflow.common.security.CurrentUserService;
+import com.cvflow.cv.dto.request.CreateCvRequest;
+import com.cvflow.cv.dto.request.UpdateCvRequest;
+import com.cvflow.cv.dto.response.CvResponse;
+import com.cvflow.cv.dto.response.CvSummaryResponse;
+import com.cvflow.cv.entity.MasterCv;
+import com.cvflow.cv.mapper.CvMapper;
+import com.cvflow.cv.model.CvContent;
+import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.repository.MasterCvRepository;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class CvService {
+    private final MasterCvRepository masterCvRepository;
+    private final CurrentUserService currentUserService;
+    private final CvAccessService cvAccessService;
+    private final CvContentCloner cloner;
+
+    public CvService(
+            MasterCvRepository masterCvRepository,
+            CurrentUserService currentUserService,
+            CvAccessService cvAccessService,
+            CvContentCloner cloner) {
+        this.masterCvRepository = masterCvRepository;
+        this.currentUserService = currentUserService;
+        this.cvAccessService = cvAccessService;
+        this.cloner = cloner;
+    }
+
+    @Transactional(readOnly = true)
+    public List<CvSummaryResponse> list() {
+        return masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(currentUserService.getCurrentUserId())
+                .stream()
+                .map(CvMapper::toSummary)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CvResponse get(UUID cvId) {
+        return CvMapper.toResponse(cvAccessService.getOwnedCv(cvId));
+    }
+
+    @Transactional
+    public CvResponse create(CreateCvRequest request) {
+        MasterCv cv = new MasterCv();
+        cv.setUserId(currentUserService.getCurrentUserId());
+        cv.setName(request.name());
+        cv.setContent(CvContent.empty());
+        cv.setSectionOrder(CvSection.defaultOrder());
+        return CvMapper.toResponse(masterCvRepository.saveAndFlush(cv));
+    }
+
+    @Transactional
+    public CvResponse update(UUID cvId, UpdateCvRequest request) {
+        MasterCv cv = cvAccessService.getOwnedCv(cvId);
+        if (!cv.getVersion().equals(request.version())) {
+            throw new OptimisticLockException();
+        }
+        validateSectionOrder(request.sectionOrder());
+        cv.setName(request.name());
+        cv.setContent(cloner.clone(request.content()));
+        cv.setSectionOrder(new ArrayList<>(request.sectionOrder()));
+        return CvMapper.toResponse(masterCvRepository.saveAndFlush(cv));
+    }
+
+    @Transactional
+    public void delete(UUID cvId) {
+        MasterCv cv = cvAccessService.getOwnedCv(cvId);
+        masterCvRepository.delete(cv);
+    }
+
+    @Transactional
+    public CvResponse duplicate(UUID cvId) {
+        MasterCv source = cvAccessService.getOwnedCv(cvId);
+        MasterCv copy = new MasterCv();
+        copy.setUserId(source.getUserId());
+        copy.setName(source.getName() + " (Copy)");
+        copy.setContent(cloner.clone(source.getContent()));
+        copy.setSectionOrder(new ArrayList<>(source.getSectionOrder()));
+        return CvMapper.toResponse(masterCvRepository.saveAndFlush(copy));
+    }
+
+    private void validateSectionOrder(List<CvSection> sectionOrder) {
+        if (sectionOrder == null || sectionOrder.isEmpty()) {
+            throw new InvalidSectionOrderException("Section order must not be empty");
+        }
+        if (new HashSet<>(sectionOrder).size() != sectionOrder.size()) {
+            throw new InvalidSectionOrderException("Section order must not contain duplicates");
+        }
+    }
+}
