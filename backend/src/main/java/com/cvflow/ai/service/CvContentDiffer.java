@@ -25,7 +25,7 @@ public class CvContentDiffer {
     public List<TranslationDiff> diff(CvContent translated, CvContent target) {
         List<TranslationDiff> diffs = new ArrayList<>();
         diffValue(diffs, CvSection.SUMMARY, null, "summary", target.getSummary(), translated.getSummary());
-        translated.getExperiences().forEach(t -> {
+        nullSafe(translated.getExperiences()).forEach(t -> {
             var current = byId(target.getExperiences(), t.getId(), Experience::getId);
             if (current.isEmpty()) {
                 return;
@@ -34,7 +34,7 @@ public class CvContentDiffer {
             diffValue(diffs, CvSection.EXPERIENCE, t.getId(), "position", current.get().getPosition(), t.getPosition());
             diffList(diffs, CvSection.EXPERIENCE, t.getId(), current.get().getDescription(), t.getDescription());
         });
-        translated.getEducation().forEach(t -> {
+        nullSafe(translated.getEducation()).forEach(t -> {
             var current = byId(target.getEducation(), t.getId(), Education::getId);
             if (current.isEmpty()) {
                 return;
@@ -45,7 +45,7 @@ public class CvContentDiffer {
             diffValue(
                     diffs, CvSection.EDUCATION, t.getId(), "description", current.get().getDescription(), t.getDescription());
         });
-        translated.getProjects().forEach(t -> {
+        nullSafe(translated.getProjects()).forEach(t -> {
             var current = byId(target.getProjects(), t.getId(), Project::getId);
             if (current.isEmpty()) {
                 return;
@@ -54,7 +54,7 @@ public class CvContentDiffer {
             diffValue(
                     diffs, CvSection.PROJECTS, t.getId(), "description", current.get().getDescription(), t.getDescription());
         });
-        translated.getSkills().forEach(t -> {
+        nullSafe(translated.getSkills()).forEach(t -> {
             var current = byId(target.getSkills(), t.getId(), Skill::getId);
             if (current.isEmpty()) {
                 return;
@@ -62,7 +62,7 @@ public class CvContentDiffer {
             diffValue(diffs, CvSection.SKILLS, t.getId(), "name", current.get().getName(), t.getName());
             diffValue(diffs, CvSection.SKILLS, t.getId(), "category", current.get().getCategory(), t.getCategory());
         });
-        translated.getLanguages().forEach(t -> {
+        nullSafe(translated.getLanguages()).forEach(t -> {
             var current = byId(target.getLanguages(), t.getId(), Language::getId);
             if (current.isEmpty()) {
                 return;
@@ -70,7 +70,7 @@ public class CvContentDiffer {
             diffValue(diffs, CvSection.LANGUAGES, t.getId(), "name", current.get().getName(), t.getName());
             diffValue(diffs, CvSection.LANGUAGES, t.getId(), "level", current.get().getLevel(), t.getLevel());
         });
-        translated.getCertifications().forEach(t -> {
+        nullSafe(translated.getCertifications()).forEach(t -> {
             var current = byId(target.getCertifications(), t.getId(), Certification::getId);
             if (current.isEmpty()) {
                 return;
@@ -81,7 +81,7 @@ public class CvContentDiffer {
                     diffs, CvSection.CERTIFICATIONS, t.getId(), "issuer", current.get().getIssuer(), t.getIssuer());
             diffValue(diffs, CvSection.CERTIFICATIONS, t.getId(), "date", current.get().getDate(), t.getDate());
         });
-        translated.getLinks().forEach(t -> {
+        nullSafe(translated.getLinks()).forEach(t -> {
             var current = byId(target.getLinks(), t.getId(), Link::getId);
             if (current.isEmpty()) {
                 return;
@@ -126,5 +126,9 @@ public class CvContentDiffer {
                 .filter(item -> idOf.apply(item) != null)
                 .collect(Collectors.toMap(idOf, Function.identity(), (a, b) -> a));
         return java.util.Optional.ofNullable(index.get(id));
+    }
+
+    private <T> List<T> nullSafe(List<T> items) {
+        return items == null ? List.of() : items;
     }
 }

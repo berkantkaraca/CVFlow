@@ -10,6 +10,7 @@ import com.cvflow.cv.service.CvService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,12 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/cvs")
+@RequiredArgsConstructor
 public class CvController {
     private final CvService cvService;
-
-    public CvController(CvService cvService) {
-        this.cvService = cvService;
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CvSummaryResponse>>> list() {

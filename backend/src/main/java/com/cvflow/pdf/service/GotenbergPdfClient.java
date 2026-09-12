@@ -4,27 +4,23 @@ import com.cvflow.common.exception.PdfGenerationException;
 import com.cvflow.pdf.config.PdfProperties;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Component
+@RequiredArgsConstructor
 public class GotenbergPdfClient {
-    private final RestClient restClient;
+    private final RestClient pdfRestClient;
     private final PdfProperties properties;
-
-    public GotenbergPdfClient(RestClient pdfRestClient, PdfProperties properties) {
-        this.restClient = pdfRestClient;
-        this.properties = properties;
-    }
 
     public byte[] convertHtmlToPdf(String html) {
         String boundary = "cvflow-" + UUID.randomUUID().toString().replace("-", "");
         byte[] multipart = multipartBody(boundary, html);
         try {
-            byte[] pdf = restClient
-                    .post()
+            byte[] pdf = pdfRestClient.post()
                     .uri(properties.baseUrl() + "/forms/chromium/convert/html")
                     .contentType(MediaType.parseMediaType("multipart/form-data; boundary=" + boundary))
                     .body(multipart)

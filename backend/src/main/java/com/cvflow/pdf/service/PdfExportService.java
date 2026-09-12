@@ -8,10 +8,12 @@ import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.pdf.template.TemplateRenderer;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class PdfExportService {
     public record PdfDocument(byte[] content, String filename) {}
 
@@ -19,17 +21,6 @@ public class PdfExportService {
     private final CvLanguageVersionRepository languageVersionRepository;
     private final TemplateRenderer templateRenderer;
     private final GotenbergPdfClient pdfClient;
-
-    public PdfExportService(
-            CvAccessService cvAccessService,
-            CvLanguageVersionRepository languageVersionRepository,
-            TemplateRenderer templateRenderer,
-            GotenbergPdfClient pdfClient) {
-        this.cvAccessService = cvAccessService;
-        this.languageVersionRepository = languageVersionRepository;
-        this.templateRenderer = templateRenderer;
-        this.pdfClient = pdfClient;
-    }
 
     @Transactional(readOnly = true)
     public PdfDocument exportPdf(UUID cvId, PdfExportRequest request) {

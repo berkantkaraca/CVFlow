@@ -17,6 +17,9 @@ import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,6 +29,9 @@ import org.hibernate.type.SqlTypes;
 @Table(
         name = "cv_language_versions",
         uniqueConstraints = @UniqueConstraint(columnNames = {"master_cv_id", "language_code"}))
+@Getter
+@Setter
+@NoArgsConstructor
 public class CvLanguageVersion {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -64,78 +70,4 @@ public class CvLanguageVersion {
     @Version
     @Column(nullable = false)
     private Long version;
-
-    public CvLanguageVersion() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getMasterCvId() {
-        return masterCvId;
-    }
-
-    public void setMasterCvId(UUID masterCvId) {
-        this.masterCvId = masterCvId;
-    }
-
-    public LanguageCode getLanguageCode() {
-        return languageCode;
-    }
-
-    public void setLanguageCode(LanguageCode languageCode) {
-        this.languageCode = languageCode;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public TemplateCode getTemplateCode() {
-        return templateCode;
-    }
-
-    public void setTemplateCode(TemplateCode templateCode) {
-        this.templateCode = templateCode;
-    }
-
-    public CvContent getContent() {
-        return content;
-    }
-
-    public void setContent(CvContent content) {
-        this.content = content;
-    }
-
-    public List<CvSection> getSectionOrder() {
-        return sectionOrder;
-    }
-
-    public void setSectionOrder(List<CvSection> sectionOrder) {
-        this.sectionOrder = sectionOrder;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
 }

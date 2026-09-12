@@ -4,28 +4,19 @@ import com.cvflow.ai.config.GeminiProperties;
 import com.cvflow.common.exception.AiServiceException;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.LanguageCode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.databind.ObjectMapper;
 
 @Component
+@RequiredArgsConstructor
 public class GeminiClient implements AiClient {
-    private final RestClient restClient;
+    private final RestClient geminiRestClient;
     private final GeminiProperties properties;
     private final ObjectMapper objectMapper;
     private final PromptBuilder promptBuilder;
-
-    public GeminiClient(
-            RestClient geminiRestClient,
-            GeminiProperties properties,
-            ObjectMapper objectMapper,
-            PromptBuilder promptBuilder) {
-        this.restClient = geminiRestClient;
-        this.properties = properties;
-        this.objectMapper = objectMapper;
-        this.promptBuilder = promptBuilder;
-    }
 
     @Override
     public String improve(String content) {
@@ -84,7 +75,7 @@ public class GeminiClient implements AiClient {
     private String generateText(GeminiApi.Request geminiRequest) {
         GeminiApi.Response response;
         try {
-            response = restClient
+            response = geminiRestClient
                     .post()
                     .uri(properties.baseUrl() + "/v1beta/models/" + properties.model() + ":generateContent")
                     .header("x-goog-api-key", properties.apiKey())

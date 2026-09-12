@@ -12,6 +12,9 @@ import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -19,6 +22,9 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "master_cvs")
+@Getter
+@Setter
+@NoArgsConstructor
 public class MasterCv {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -49,62 +55,4 @@ public class MasterCv {
     @Version
     @Column(nullable = false)
     private Long version;
-
-    public MasterCv() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public CvContent getContent() {
-        return content;
-    }
-
-    public void setContent(CvContent content) {
-        this.content = content;
-    }
-
-    public List<CvSection> getSectionOrder() {
-        return sectionOrder;
-    }
-
-    public void setSectionOrder(List<CvSection> sectionOrder) {
-        this.sectionOrder = sectionOrder;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
 }

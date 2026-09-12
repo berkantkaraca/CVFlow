@@ -15,26 +15,17 @@ import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class LanguageVersionService {
     private final CvLanguageVersionRepository languageVersionRepository;
     private final CvAccessService cvAccessService;
     private final CvContentCloner cloner;
     private final SectionOrderValidator sectionOrderValidator;
-
-    public LanguageVersionService(
-            CvLanguageVersionRepository languageVersionRepository,
-            CvAccessService cvAccessService,
-            CvContentCloner cloner,
-            SectionOrderValidator sectionOrderValidator) {
-        this.languageVersionRepository = languageVersionRepository;
-        this.cvAccessService = cvAccessService;
-        this.cloner = cloner;
-        this.sectionOrderValidator = sectionOrderValidator;
-    }
 
     @Transactional(readOnly = true)
     public List<LanguageVersionSummaryResponse> list(UUID cvId) {

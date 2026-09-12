@@ -11,6 +11,7 @@ import com.cvflow.common.response.ApiResponses;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,12 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/ai")
+@RequiredArgsConstructor
 public class AiController {
     private final AiService aiService;
-
-    public AiController(AiService aiService) {
-        this.aiService = aiService;
-    }
 
     @PostMapping("/improve")
     public ResponseEntity<ApiResponse<AiSuggestionResponse>> improve(@Valid @RequestBody ImproveRequest request) {

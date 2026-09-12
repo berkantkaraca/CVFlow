@@ -19,10 +19,12 @@ import com.cvflow.cv.entity.CvLanguageVersion;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AiService {
     private final AiClient aiClient;
     private final CvAiSuggestionRepository suggestionRepository;
@@ -31,23 +33,6 @@ public class AiService {
     private final CvFieldValidator fieldValidator;
     private final SuggestionApplier applier;
     private final CvContentDiffer differ;
-
-    public AiService(
-            AiClient aiClient,
-            CvAiSuggestionRepository suggestionRepository,
-            CvLanguageVersionRepository languageVersionRepository,
-            CvAccessService cvAccessService,
-            CvFieldValidator fieldValidator,
-            SuggestionApplier applier,
-            CvContentDiffer differ) {
-        this.aiClient = aiClient;
-        this.suggestionRepository = suggestionRepository;
-        this.languageVersionRepository = languageVersionRepository;
-        this.cvAccessService = cvAccessService;
-        this.fieldValidator = fieldValidator;
-        this.applier = applier;
-        this.differ = differ;
-    }
 
     @Transactional
     public AiSuggestionResponse improve(ImproveRequest request) {

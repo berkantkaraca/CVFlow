@@ -8,23 +8,16 @@ import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.repository.MasterCvRepository;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CvAccessService {
     private final MasterCvRepository masterCvRepository;
     private final CvLanguageVersionRepository languageVersionRepository;
     private final CurrentUserService currentUserService;
-
-    public CvAccessService(
-            MasterCvRepository masterCvRepository,
-            CvLanguageVersionRepository languageVersionRepository,
-            CurrentUserService currentUserService) {
-        this.masterCvRepository = masterCvRepository;
-        this.languageVersionRepository = languageVersionRepository;
-        this.currentUserService = currentUserService;
-    }
 
     @Transactional(readOnly = true)
     public MasterCv getOwnedCv(UUID cvId) {

@@ -17,10 +17,12 @@ import com.cvflow.cv.repository.MasterCvRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CvService {
     private final MasterCvRepository masterCvRepository;
     private final CvLanguageVersionRepository languageVersionRepository;
@@ -28,21 +30,6 @@ public class CvService {
     private final CvAccessService cvAccessService;
     private final CvContentCloner cloner;
     private final SectionOrderValidator sectionOrderValidator;
-
-    public CvService(
-            MasterCvRepository masterCvRepository,
-            CvLanguageVersionRepository languageVersionRepository,
-            CurrentUserService currentUserService,
-            CvAccessService cvAccessService,
-            CvContentCloner cloner,
-            SectionOrderValidator sectionOrderValidator) {
-        this.masterCvRepository = masterCvRepository;
-        this.languageVersionRepository = languageVersionRepository;
-        this.currentUserService = currentUserService;
-        this.cvAccessService = cvAccessService;
-        this.cloner = cloner;
-        this.sectionOrderValidator = sectionOrderValidator;
-    }
 
     @Transactional(readOnly = true)
     public List<CvSummaryResponse> list() {

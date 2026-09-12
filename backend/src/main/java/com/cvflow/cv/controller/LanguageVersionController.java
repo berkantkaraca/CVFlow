@@ -10,6 +10,7 @@ import com.cvflow.cv.service.LanguageVersionService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,12 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/cvs/{cvId}/languages")
+@RequiredArgsConstructor
 public class LanguageVersionController {
     private final LanguageVersionService languageVersionService;
-
-    public LanguageVersionController(LanguageVersionService languageVersionService) {
-        this.languageVersionService = languageVersionService;
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<LanguageVersionSummaryResponse>>> list(@PathVariable UUID cvId) {

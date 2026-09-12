@@ -28,7 +28,7 @@ public class SuggestionApplier {
     }
 
     private void applyExperience(CvContent content, AiSuggestionPayload payload) {
-        var experience = content.getExperiences().stream()
+        var experience = nullSafe(content.getExperiences()).stream()
                 .filter(e -> e.getId() != null && e.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -36,18 +36,20 @@ public class SuggestionApplier {
             case "company" -> experience.setCompany(payload.getSuggested());
             case "position" -> experience.setPosition(payload.getSuggested());
             case "description" -> {
-                int index = experience.getDescription().indexOf(payload.getOriginal());
+                var bullets = new java.util.ArrayList<>(nullSafe(experience.getDescription()));
+                int index = bullets.indexOf(payload.getOriginal());
                 if (index < 0) {
                     throw new InvalidSuggestionStateException();
                 }
-                experience.getDescription().set(index, payload.getSuggested());
+                bullets.set(index, payload.getSuggested());
+                experience.setDescription(bullets);
             }
             default -> throw new InvalidFieldException("Unsupported field: " + payload.getField());
         }
     }
 
     private void applyEducation(CvContent content, AiSuggestionPayload payload) {
-        var education = content.getEducation().stream()
+        var education = nullSafe(content.getEducation()).stream()
                 .filter(e -> e.getId() != null && e.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -61,7 +63,7 @@ public class SuggestionApplier {
     }
 
     private void applyProject(CvContent content, AiSuggestionPayload payload) {
-        var project = content.getProjects().stream()
+        var project = nullSafe(content.getProjects()).stream()
                 .filter(p -> p.getId() != null && p.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -73,7 +75,7 @@ public class SuggestionApplier {
     }
 
     private void applySkill(CvContent content, AiSuggestionPayload payload) {
-        var skill = content.getSkills().stream()
+        var skill = nullSafe(content.getSkills()).stream()
                 .filter(s -> s.getId() != null && s.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -85,7 +87,7 @@ public class SuggestionApplier {
     }
 
     private void applyLanguage(CvContent content, AiSuggestionPayload payload) {
-        var language = content.getLanguages().stream()
+        var language = nullSafe(content.getLanguages()).stream()
                 .filter(l -> l.getId() != null && l.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -97,7 +99,7 @@ public class SuggestionApplier {
     }
 
     private void applyCertification(CvContent content, AiSuggestionPayload payload) {
-        var certification = content.getCertifications().stream()
+        var certification = nullSafe(content.getCertifications()).stream()
                 .filter(c -> c.getId() != null && c.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -110,7 +112,7 @@ public class SuggestionApplier {
     }
 
     private void applyLink(CvContent content, AiSuggestionPayload payload) {
-        var link = content.getLinks().stream()
+        var link = nullSafe(content.getLinks()).stream()
                 .filter(l -> l.getId() != null && l.getId().equals(payload.getEntityId()))
                 .findFirst()
                 .orElseThrow(() -> new InvalidSuggestionStateException());
@@ -128,5 +130,9 @@ public class SuggestionApplier {
         if (payload.getSection() == CvSection.SUMMARY && payload.getEntityId() != null) {
             throw new InvalidFieldException("Section SUMMARY does not take an entity id");
         }
+    }
+
+    private <T> java.util.List<T> nullSafe(java.util.List<T> items) {
+        return items == null ? java.util.List.of() : items;
     }
 }

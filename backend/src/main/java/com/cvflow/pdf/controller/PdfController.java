@@ -4,6 +4,7 @@ import com.cvflow.cv.dto.request.PdfExportRequest;
 import com.cvflow.pdf.service.PdfExportService;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -16,12 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/cvs/{cvId}/export")
+@RequiredArgsConstructor
 public class PdfController {
     private final PdfExportService pdfExportService;
-
-    public PdfController(PdfExportService pdfExportService) {
-        this.pdfExportService = pdfExportService;
-    }
 
     @PostMapping("/pdf")
     public ResponseEntity<byte[]> exportPdf(@PathVariable UUID cvId, @Valid @RequestBody PdfExportRequest request) {

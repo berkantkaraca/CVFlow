@@ -13,6 +13,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,6 +23,9 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "cv_ai_suggestions")
+@Getter
+@Setter
+@NoArgsConstructor
 public class CvAiSuggestion {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -47,54 +53,4 @@ public class CvAiSuggestion {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    public CvAiSuggestion() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getLanguageVersionId() {
-        return languageVersionId;
-    }
-
-    public void setLanguageVersionId(UUID languageVersionId) {
-        this.languageVersionId = languageVersionId;
-    }
-
-    public AiOperation getOperation() {
-        return operation;
-    }
-
-    public void setOperation(AiOperation operation) {
-        this.operation = operation;
-    }
-
-    public AiSuggestionStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AiSuggestionStatus status) {
-        this.status = status;
-    }
-
-    public AiSuggestionPayload getPayload() {
-        return payload;
-    }
-
-    public void setPayload(AiSuggestionPayload payload) {
-        this.payload = payload;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
 }
