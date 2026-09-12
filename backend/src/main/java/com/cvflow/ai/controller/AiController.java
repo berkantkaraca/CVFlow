@@ -1,7 +1,9 @@
 package com.cvflow.ai.controller;
 
+import com.cvflow.ai.dto.AcceptAllRequest;
 import com.cvflow.ai.dto.AiSuggestionResponse;
 import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.dto.TranslateRequest;
 import com.cvflow.ai.model.AiSuggestionStatus;
 import com.cvflow.ai.service.AiService;
 import com.cvflow.common.response.ApiResponse;
@@ -36,6 +38,18 @@ public class AiController {
     @PostMapping("/rewrite")
     public ResponseEntity<ApiResponse<AiSuggestionResponse>> rewrite(@Valid @RequestBody ImproveRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponses.success(aiService.rewrite(request)));
+    }
+
+    @PostMapping("/translate")
+    public ResponseEntity<ApiResponse<List<AiSuggestionResponse>>> translate(
+            @Valid @RequestBody TranslateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponses.success(aiService.translate(request)));
+    }
+
+    @PostMapping("/suggestions/accept-all")
+    public ResponseEntity<ApiResponse<List<AiSuggestionResponse>>> acceptAll(
+            @Valid @RequestBody AcceptAllRequest request) {
+        return ResponseEntity.ok(ApiResponses.success(aiService.acceptAll(request)));
     }
 
     @GetMapping("/suggestions")

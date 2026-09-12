@@ -89,6 +89,28 @@ class GeminiClientTest {
         assertTrue(ex.getMessage().contains("failed"));
     }
 
+    @Test
+    void translateContentParsesTranslatedDocument() {
+        body = geminiBody(
+                "{\"personal\":{},\"summary\":\"Yazılım geliştirici\",\"experiences\":[],\"education\":[],"
+                        + "\"projects\":[],\"skills\":[],\"languages\":[],\"certifications\":[],\"links\":[]}");
+
+        com.cvflow.cv.model.CvContent translated =
+                client.translateContent(com.cvflow.cv.model.CvContent.empty(), LanguageCode.EN, LanguageCode.TR);
+
+        assertEquals("Yazılım geliştirici", translated.getSummary());
+    }
+
+    @Test
+    void translateContentRejectsInvalidDocument() {
+        body = geminiBody("{\"summary\":");
+
+        AiServiceException ex = assertThrows(
+                AiServiceException.class,
+                () -> client.translateContent(com.cvflow.cv.model.CvContent.empty(), LanguageCode.EN, LanguageCode.TR));
+        assertEquals("AI_INVALID_RESPONSE", ex.getCode());
+    }
+
     private static String geminiBody(String innerText) {
         String escaped = innerText.replace("\\", "\\\\").replace("\"", "\\\"");
         return "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"" + escaped + "\"}]}}]}";

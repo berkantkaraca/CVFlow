@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.cvflow.ai.client.AiClient;
 import com.cvflow.ai.dto.AiSuggestionResponse;
 import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.dto.TranslateRequest;
 import com.cvflow.ai.entity.CvAiSuggestion;
 import com.cvflow.ai.model.AiOperation;
 import com.cvflow.ai.model.AiSuggestionPayload;
@@ -65,7 +66,8 @@ class AiServiceTest {
                 languageVersionRepository,
                 cvAccessService,
                 new CvFieldValidator(),
-                new SuggestionApplier());
+                new SuggestionApplier(),
+                new CvContentDiffer());
     }
 
     @Test
@@ -143,6 +145,64 @@ class AiServiceTest {
         when(suggestionRepository.findById(suggestionId)).thenReturn(Optional.empty());
 
         assertThrows(SuggestionNotFoundException.class, () -> service.accept(suggestionId));
+    }
+
+    @Test
+    void translateCreatesOneSuggestionPerChangedField() {
+        UUID sourceId = UUID.randomUUID();
+        CvLanguageVersion source = languageVersion();
+        source.setId(sourceId);
+        source.setLanguageCode(LanguageCode.TR);
+        CvLanguageVersion target = languageVersion();
+        when(cvAccessService.getOwnedLanguageVersion(sourceId)).thenReturn(source);
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(target);
+        CvContent translated = CvContent.empty();
+        translated.setSummary("Kıdemli geliştirici");
+        when(aiClient.translateContent(any(), any(), any())).thenReturn(translated);
+        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        var suggestions = service.translate(new TranslateRequest(sourceId, versionId));
+
+        assertEquals(1, suggestions.size());
+        assertEquals(AiOperation.TRANSLATE, suggestions.get(0).operation());
+        assertEquals(CvSection.SUMMARY, suggestions.get(0).payload().getSection());
+        assertEquals("Kıdemli geliştirici", suggestions.get(0).payload().getSuggested());
+    }
+
+    @Test
+    void translateRejectsSameLanguage() {
+        CvLanguageVersion source = languageVersion();
+        source.setLanguageCode(LanguageCode.EN);
+        when(cvAccessService.getOwnedLanguageVersion(source.getId())).thenReturn(source);
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(languageVersion());
+
+        assertThrows(
+                com.cvflow.common.exception.InvalidFieldException.class,
+                () -> service.translate(new TranslateRequest(source.getId(), versionId)));
+    }
+
+    @Test
+    void acceptAllAppliesEveryPendingSuggestion() {
+        CvLanguageVersion version = languageVersion();
+        version.getContent().setSummary("old summary");
+        CvAiSuggestion first = suggestion(AiSuggestionStatus.PENDING);
+        first.getPayload().setSection(CvSection.SUMMARY);
+        first.getPayload().setEntityId(null);
+        first.getPayload().setField("summary");
+        first.getPayload().setOriginal("old summary");
+        first.getPayload().setSuggested("new summary");
+        CvAiSuggestion second = suggestion(AiSuggestionStatus.PENDING);
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(version);
+        when(suggestionRepository.findAllByLanguageVersionIdAndStatus(versionId, AiSuggestionStatus.PENDING))
+                .thenReturn(new ArrayList<>(List.of(first, second)));
+        when(languageVersionRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+        when(suggestionRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
+
+        var accepted = service.acceptAll(new com.cvflow.ai.dto.AcceptAllRequest(versionId));
+
+        assertEquals(2, accepted.size());
+        assertEquals("new summary", version.getContent().getSummary());
+        verify(languageVersionRepository).saveAndFlush(any());
     }
 
     private ImproveRequest improveRequest() {

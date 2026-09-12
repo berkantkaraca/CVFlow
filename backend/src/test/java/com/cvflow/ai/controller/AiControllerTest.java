@@ -93,6 +93,31 @@ class AiControllerTest {
                 .andExpect(jsonPath("$.data.status").value("REJECTED"));
     }
 
+    @Test
+    void translateReturns201() throws Exception {
+        when(aiService.translate(any())).thenReturn(List.of(sample()));
+
+        mvc.perform(post("/api/v1/ai/translate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                "{\"sourceLanguageVersionId\":\"" + versionId
+                                        + "\",\"targetLanguageVersionId\":\"" + versionId + "\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(1));
+    }
+
+    @Test
+    void acceptAllReturns200() throws Exception {
+        when(aiService.acceptAll(any())).thenReturn(List.of(accepted()));
+
+        mvc.perform(post("/api/v1/ai/suggestions/accept-all")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languageVersionId\":\"" + versionId + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
     private AiSuggestionResponse sample() {
         return new AiSuggestionResponse(
                 suggestionId,

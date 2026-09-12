@@ -1,5 +1,6 @@
 package com.cvflow.ai.client;
 
+import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.LanguageCode;
 
 public interface AiClient {
@@ -8,4 +9,6 @@ public interface AiClient {
     String rewrite(String content);
 
     String translate(String content, LanguageCode sourceLanguage, LanguageCode targetLanguage);
+
+    CvContent translateContent(CvContent content, LanguageCode sourceLanguage, LanguageCode targetLanguage);
 }

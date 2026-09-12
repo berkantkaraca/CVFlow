@@ -2,6 +2,7 @@ package com.cvflow.ai.client;
 
 import com.cvflow.ai.config.GeminiProperties;
 import com.cvflow.common.exception.AiServiceException;
+import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.LanguageCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -41,7 +42,45 @@ public class GeminiClient implements AiClient {
         return generate(promptBuilder.translate(content, sourceLanguage, targetLanguage));
     }
 
+    @Override
+    public CvContent translateContent(
+            CvContent content, LanguageCode sourceLanguage, LanguageCode targetLanguage) {
+        String contentJson;
+        try {
+            contentJson = objectMapper.writeValueAsString(content == null ? CvContent.empty() : content);
+        } catch (Exception ex) {
+            throw new AiServiceException("AI_INVALID_RESPONSE", "CV content could not be serialized");
+        }
+        String translated = generateText(promptBuilder.translateContent(contentJson, sourceLanguage, targetLanguage));
+        try {
+            CvContent parsed = objectMapper.readValue(translated, CvContent.class);
+            if (parsed == null) {
+                throw new AiServiceException("AI_EMPTY_RESPONSE", "AI provider returned no usable content");
+            }
+            return parsed;
+        } catch (AiServiceException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new AiServiceException("AI_INVALID_RESPONSE", "AI provider returned an invalid response");
+        }
+    }
+
     private String generate(String prompt) {
+        String text = generateText(prompt);
+        try {
+            GeminiApi.SuggestedText parsed = objectMapper.readValue(text, GeminiApi.SuggestedText.class);
+            if (parsed.suggested() == null || parsed.suggested().isBlank()) {
+                throw new AiServiceException("AI_EMPTY_RESPONSE", "AI provider returned no usable content");
+            }
+            return parsed.suggested();
+        } catch (AiServiceException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new AiServiceException("AI_INVALID_RESPONSE", "AI provider returned an invalid response");
+        }
+    }
+
+    private String generateText(String prompt) {
         GeminiApi.Response response;
         try {
             response = restClient
@@ -58,17 +97,7 @@ public class GeminiClient implements AiClient {
         if (text == null || text.isBlank()) {
             throw new AiServiceException("AI_EMPTY_RESPONSE", "AI provider returned no usable content");
         }
-        try {
-            GeminiApi.SuggestedText parsed = objectMapper.readValue(text, GeminiApi.SuggestedText.class);
-            if (parsed.suggested() == null || parsed.suggested().isBlank()) {
-                throw new AiServiceException("AI_EMPTY_RESPONSE", "AI provider returned no usable content");
-            }
-            return parsed.suggested();
-        } catch (AiServiceException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new AiServiceException("AI_INVALID_RESPONSE", "AI provider returned an invalid response");
-        }
+        return text;
     }
 
     private String firstText(GeminiApi.Response response) {

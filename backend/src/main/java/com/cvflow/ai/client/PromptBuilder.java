@@ -4,8 +4,7 @@ import com.cvflow.cv.model.LanguageCode;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PromptBuilder {
-    private static final String RULES =
+public class PromptBuilder {    private static final String RULES =
             """
             Rules:
             - Never invent facts, technologies, companies, responsibilities, achievements, metrics or dates.
@@ -51,5 +50,21 @@ public class PromptBuilder {
 
                 %s
                 """.formatted(sourceLanguage, targetLanguage, content, RULES);
+    }
+
+    public String translateContent(String contentJson, LanguageCode sourceLanguage, LanguageCode targetLanguage) {
+        return """
+                Translate every human-readable string value in the following CV JSON document from %s to %s.
+                Preserve the exact meaning of each string. Do not add or remove information.
+                Use professional CV terminology. Preserve technical terms, company names and dates.
+                Keep all JSON keys, the document structure and every id value exactly as they are.
+                Translate only the human-readable string values.
+                Return the full translated JSON document and nothing else.
+
+                CV JSON:
+                %s
+
+                %s
+                """.formatted(sourceLanguage, targetLanguage, contentJson, RULES);
     }
 }

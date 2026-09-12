@@ -1,14 +1,17 @@
 package com.cvflow.ai.service;
 
 import com.cvflow.ai.client.AiClient;
+import com.cvflow.ai.dto.AcceptAllRequest;
 import com.cvflow.ai.dto.AiSuggestionResponse;
 import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.dto.TranslateRequest;
 import com.cvflow.ai.entity.CvAiSuggestion;
 import com.cvflow.ai.mapper.AiSuggestionMapper;
 import com.cvflow.ai.model.AiOperation;
 import com.cvflow.ai.model.AiSuggestionPayload;
 import com.cvflow.ai.model.AiSuggestionStatus;
 import com.cvflow.ai.repository.CvAiSuggestionRepository;
+import com.cvflow.common.exception.InvalidFieldException;
 import com.cvflow.common.exception.InvalidSuggestionStateException;
 import com.cvflow.common.exception.SuggestionNotFoundException;
 import com.cvflow.common.security.CvAccessService;
@@ -27,6 +30,7 @@ public class AiService {
     private final CvAccessService cvAccessService;
     private final CvFieldValidator fieldValidator;
     private final SuggestionApplier applier;
+    private final CvContentDiffer differ;
 
     public AiService(
             AiClient aiClient,
@@ -34,13 +38,15 @@ public class AiService {
             CvLanguageVersionRepository languageVersionRepository,
             CvAccessService cvAccessService,
             CvFieldValidator fieldValidator,
-            SuggestionApplier applier) {
+            SuggestionApplier applier,
+            CvContentDiffer differ) {
         this.aiClient = aiClient;
         this.suggestionRepository = suggestionRepository;
         this.languageVersionRepository = languageVersionRepository;
         this.cvAccessService = cvAccessService;
         this.fieldValidator = fieldValidator;
         this.applier = applier;
+        this.differ = differ;
     }
 
     @Transactional
@@ -57,6 +63,43 @@ public class AiService {
         fieldValidator.validate(request.section(), request.entityId(), request.field());
         String suggested = aiClient.rewrite(request.content());
         return saveSuggestion(version.getId(), AiOperation.REWRITE, request, suggested);
+    }
+
+    @Transactional
+    public List<AiSuggestionResponse> translate(TranslateRequest request) {
+        CvLanguageVersion source = cvAccessService.getOwnedLanguageVersion(request.sourceLanguageVersionId());
+        CvLanguageVersion target = cvAccessService.getOwnedLanguageVersion(request.targetLanguageVersionId());
+        if (source.getLanguageCode() == target.getLanguageCode()) {
+            throw new InvalidFieldException("Source and target language versions must have different languages");
+        }
+        com.cvflow.cv.model.CvContent translated = aiClient.translateContent(
+                source.getContent(), source.getLanguageCode(), target.getLanguageCode());
+        List<AiSuggestionResponse> suggestions = differ.diff(translated, target.getContent()).stream()
+                .map(diff -> {
+                    CvAiSuggestion suggestion = new CvAiSuggestion();
+                    suggestion.setLanguageVersionId(target.getId());
+                    suggestion.setOperation(AiOperation.TRANSLATE);
+                    suggestion.setStatus(AiSuggestionStatus.PENDING);
+                    suggestion.setPayload(new AiSuggestionPayload(
+                            diff.section(), diff.entityId(), diff.field(), diff.original(), diff.suggested()));
+                    return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+                })
+                .toList();
+        return suggestions;
+    }
+
+    @Transactional
+    public List<AiSuggestionResponse> acceptAll(AcceptAllRequest request) {
+        CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
+        List<CvAiSuggestion> pending =
+                suggestionRepository.findAllByLanguageVersionIdAndStatus(version.getId(), AiSuggestionStatus.PENDING);
+        for (CvAiSuggestion suggestion : pending) {
+            applier.apply(version.getContent(), suggestion.getPayload());
+            suggestion.setStatus(AiSuggestionStatus.ACCEPTED);
+        }
+        languageVersionRepository.saveAndFlush(version);
+        List<CvAiSuggestion> saved = suggestionRepository.saveAll(pending);
+        return saved.stream().map(AiSuggestionMapper::toResponse).toList();
     }
 
     @Transactional(readOnly = true)

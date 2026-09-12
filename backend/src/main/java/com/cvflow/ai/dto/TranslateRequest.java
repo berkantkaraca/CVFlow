@@ -1,0 +1,7 @@
+package com.cvflow.ai.dto;
+
+import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
+
+public record TranslateRequest(
+        @NotNull UUID sourceLanguageVersionId, @NotNull UUID targetLanguageVersionId) {}
