@@ -1,6 +1,5 @@
 package com.cvflow.cv.service;
 
-import com.cvflow.common.exception.InvalidSectionOrderException;
 import com.cvflow.common.exception.OptimisticLockException;
 import com.cvflow.common.security.CvAccessService;
 import com.cvflow.common.security.CurrentUserService;
@@ -8,13 +7,14 @@ import com.cvflow.cv.dto.request.CreateCvRequest;
 import com.cvflow.cv.dto.request.UpdateCvRequest;
 import com.cvflow.cv.dto.response.CvResponse;
 import com.cvflow.cv.dto.response.CvSummaryResponse;
+import com.cvflow.cv.entity.CvLanguageVersion;
 import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.mapper.CvMapper;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.repository.MasterCvRepository;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -23,19 +23,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CvService {
     private final MasterCvRepository masterCvRepository;
+    private final CvLanguageVersionRepository languageVersionRepository;
     private final CurrentUserService currentUserService;
     private final CvAccessService cvAccessService;
     private final CvContentCloner cloner;
+    private final SectionOrderValidator sectionOrderValidator;
 
     public CvService(
             MasterCvRepository masterCvRepository,
+            CvLanguageVersionRepository languageVersionRepository,
             CurrentUserService currentUserService,
             CvAccessService cvAccessService,
-            CvContentCloner cloner) {
+            CvContentCloner cloner,
+            SectionOrderValidator sectionOrderValidator) {
         this.masterCvRepository = masterCvRepository;
+        this.languageVersionRepository = languageVersionRepository;
         this.currentUserService = currentUserService;
         this.cvAccessService = cvAccessService;
         this.cloner = cloner;
+        this.sectionOrderValidator = sectionOrderValidator;
     }
 
     @Transactional(readOnly = true)
@@ -67,7 +73,7 @@ public class CvService {
         if (!cv.getVersion().equals(request.version())) {
             throw new OptimisticLockException();
         }
-        validateSectionOrder(request.sectionOrder());
+        sectionOrderValidator.validate(request.sectionOrder());
         cv.setName(request.name());
         cv.setContent(cloner.clone(request.content()));
         cv.setSectionOrder(new ArrayList<>(request.sectionOrder()));
@@ -88,15 +94,17 @@ public class CvService {
         copy.setName(source.getName() + " (Copy)");
         copy.setContent(cloner.clone(source.getContent()));
         copy.setSectionOrder(new ArrayList<>(source.getSectionOrder()));
-        return CvMapper.toResponse(masterCvRepository.saveAndFlush(copy));
-    }
-
-    private void validateSectionOrder(List<CvSection> sectionOrder) {
-        if (sectionOrder == null || sectionOrder.isEmpty()) {
-            throw new InvalidSectionOrderException("Section order must not be empty");
+        MasterCv saved = masterCvRepository.saveAndFlush(copy);
+        for (CvLanguageVersion languageVersion : languageVersionRepository.findAllByMasterCvId(source.getId())) {
+            CvLanguageVersion languageCopy = new CvLanguageVersion();
+            languageCopy.setMasterCvId(saved.getId());
+            languageCopy.setLanguageCode(languageVersion.getLanguageCode());
+            languageCopy.setName(languageVersion.getName());
+            languageCopy.setTemplateCode(languageVersion.getTemplateCode());
+            languageCopy.setContent(cloner.clone(languageVersion.getContent()));
+            languageCopy.setSectionOrder(new ArrayList<>(languageVersion.getSectionOrder()));
+            languageVersionRepository.save(languageCopy);
         }
-        if (new HashSet<>(sectionOrder).size() != sectionOrder.size()) {
-            throw new InvalidSectionOrderException("Section order must not contain duplicates");
-        }
+        return CvMapper.toResponse(saved);
     }
 }

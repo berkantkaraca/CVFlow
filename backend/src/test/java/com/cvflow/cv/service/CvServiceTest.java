@@ -16,9 +16,13 @@ import com.cvflow.common.security.CurrentUserService;
 import com.cvflow.cv.dto.request.CreateCvRequest;
 import com.cvflow.cv.dto.request.UpdateCvRequest;
 import com.cvflow.cv.dto.response.CvResponse;
+import com.cvflow.cv.entity.CvLanguageVersion;
 import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.model.LanguageCode;
+import com.cvflow.cv.model.TemplateCode;
+import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.repository.MasterCvRepository;
 import tools.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -36,6 +40,9 @@ class CvServiceTest {
     private MasterCvRepository masterCvRepository;
 
     @Mock
+    private CvLanguageVersionRepository languageVersionRepository;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @Mock
@@ -48,7 +55,12 @@ class CvServiceTest {
     @BeforeEach
     void setup() {
         cvService = new CvService(
-                masterCvRepository, currentUserService, cvAccessService, new CvContentCloner(new ObjectMapper()));
+                masterCvRepository,
+                languageVersionRepository,
+                currentUserService,
+                cvAccessService,
+                new CvContentCloner(new ObjectMapper()),
+                new SectionOrderValidator());
         lenient().when(currentUserService.getCurrentUserId()).thenReturn(userId);
     }
 
@@ -104,11 +116,25 @@ class CvServiceTest {
         MasterCv source = ownedCv(2L);
         source.setName("Original");
         when(cvAccessService.getOwnedCv(cvId)).thenReturn(source);
+        when(languageVersionRepository.findAllByMasterCvId(cvId)).thenReturn(List.of());
         when(masterCvRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
 
         CvResponse copy = cvService.duplicate(cvId);
 
         assertEquals("Original (Copy)", copy.name());
+    }
+
+    @Test
+    void duplicateCopiesLanguageVersions() {
+        MasterCv source = ownedCv(2L);
+        when(cvAccessService.getOwnedCv(cvId)).thenReturn(source);
+        CvLanguageVersion english = languageVersion(LanguageCode.EN);
+        when(languageVersionRepository.findAllByMasterCvId(cvId)).thenReturn(List.of(english));
+        when(masterCvRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+
+        cvService.duplicate(cvId);
+
+        verify(languageVersionRepository).save(any(CvLanguageVersion.class));
     }
 
     private MasterCv ownedCv(long version) {
@@ -120,5 +146,18 @@ class CvServiceTest {
         cv.setSectionOrder(CvSection.defaultOrder());
         cv.setVersion(version);
         return cv;
+    }
+
+    private CvLanguageVersion languageVersion(LanguageCode languageCode) {
+        CvLanguageVersion version = new CvLanguageVersion();
+        version.setId(UUID.randomUUID());
+        version.setMasterCvId(cvId);
+        version.setLanguageCode(languageCode);
+        version.setName("English");
+        version.setTemplateCode(TemplateCode.MODERN);
+        version.setContent(CvContent.empty());
+        version.setSectionOrder(CvSection.defaultOrder());
+        version.setVersion(0L);
+        return version;
     }
 }
