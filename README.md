@@ -64,7 +64,12 @@ See `.env.example`. Never commit `.env` or keys.
 
 ## Local setup (without Docker, except DB)
 
+All commands assume your terminal is in the repo root (`C:\Users\bkaraca\Desktop\CVFlow`):
+
 ```bash
+# 0. Go to the repo root first
+cd C:\Users\bkaraca\Desktop\CVFlow
+
 # 1. Database (+ optional PDF service)
 docker compose up -d postgres gotenberg
 
