@@ -5,6 +5,8 @@ import { AiFieldButtons, SuggestionPanel } from '../features/ai/SuggestionPanel'
 import { CvDocumentEditor } from '../features/editor/CvDocumentEditor'
 import { useLanguage, useLanguages, useUpdateLanguage } from '../features/languages/languageApi'
 import { exportPdf } from '../features/pdf/pdfApi'
+import { RevisionPanel } from '../features/revisions/RevisionPanel'
+import { useLanguageRevisions, useRestoreLanguageRevision } from '../features/revisions/revisionApi'
 import { toastFromError, useUiStore } from '../stores/uiStore'
 import type { TemplateCode } from '../types/cv'
 
@@ -13,6 +15,8 @@ export function LanguageEditorPage() {
   const notify = useUiStore((s) => s.notify)
   const { data: language, isLoading, isError, refetch } = useLanguage(cvId, languageId)
   const { data: languages, refetch: refetchLanguages } = useLanguages(cvId)
+  const { data: revisions, isLoading: revisionsLoading } = useLanguageRevisions(cvId, languageId)
+  const restoreRevision = useRestoreLanguageRevision(cvId, languageId)
   const updateLanguage = useUpdateLanguage(cvId, languageId)
   const [exporting, setExporting] = useState(false)
 
@@ -115,6 +119,19 @@ export function LanguageEditorPage() {
         )}
         previewTemplate={language.templateCode}
         previewLanguage={language.languageCode}
+      />
+
+      <RevisionPanel
+        revisions={revisions}
+        isLoading={revisionsLoading}
+        currentVersion={language.version}
+        previewTemplate={language.templateCode}
+        previewLanguage={language.languageCode}
+        restoring={restoreRevision.isPending}
+        onRestore={async (revisionId, version) => {
+          await restoreRevision.mutateAsync({ revisionId, version })
+          void refetch()
+        }}
       />
 
       <SuggestionPanel

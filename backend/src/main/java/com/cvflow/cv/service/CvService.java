@@ -4,14 +4,18 @@ import com.cvflow.common.exception.OptimisticLockException;
 import com.cvflow.common.security.CvAccessService;
 import com.cvflow.common.security.CurrentUserService;
 import com.cvflow.cv.dto.request.CreateCvRequest;
+import com.cvflow.cv.dto.request.RestoreRevisionRequest;
 import com.cvflow.cv.dto.request.UpdateCvRequest;
 import com.cvflow.cv.dto.response.CvResponse;
 import com.cvflow.cv.dto.response.CvSummaryResponse;
+import com.cvflow.cv.dto.response.RevisionResponse;
+import com.cvflow.cv.entity.CvContentRevision;
 import com.cvflow.cv.entity.CvLanguageVersion;
 import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.mapper.CvMapper;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.model.RevisionDocumentType;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.repository.MasterCvRepository;
 import java.util.ArrayList;
@@ -30,6 +34,7 @@ public class CvService {
     private final CvAccessService cvAccessService;
     private final CvContentCloner cloner;
     private final SectionOrderValidator sectionOrderValidator;
+    private final RevisionService revisionService;
 
     @Transactional(readOnly = true)
     public List<CvSummaryResponse> list() {
@@ -61,6 +66,7 @@ public class CvService {
             throw new OptimisticLockException();
         }
         sectionOrderValidator.validate(request.sectionOrder());
+        revisionService.captureMaster(cv);
         cv.setName(request.name());
         cv.setContent(cloner.clone(request.content()));
         cv.setSectionOrder(new ArrayList<>(request.sectionOrder()));
@@ -70,6 +76,7 @@ public class CvService {
     @Transactional
     public void delete(UUID cvId) {
         MasterCv cv = cvAccessService.getOwnedCv(cvId);
+        revisionService.deleteAll(RevisionDocumentType.MASTER_CV, cvId);
         masterCvRepository.delete(cv);
     }
 
@@ -93,5 +100,25 @@ public class CvService {
             languageVersionRepository.save(languageCopy);
         }
         return CvMapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RevisionResponse> listRevisions(UUID cvId) {
+        MasterCv cv = cvAccessService.getOwnedCv(cvId);
+        return revisionService.list(RevisionDocumentType.MASTER_CV, cv.getId());
+    }
+
+    @Transactional
+    public CvResponse restoreRevision(UUID cvId, UUID revisionId, RestoreRevisionRequest request) {
+        MasterCv cv = cvAccessService.getOwnedCv(cvId);
+        if (!cv.getVersion().equals(request.version())) {
+            throw new OptimisticLockException();
+        }
+        CvContentRevision revision =
+                revisionService.load(RevisionDocumentType.MASTER_CV, cv.getId(), revisionId);
+        revisionService.captureMaster(cv);
+        cv.setContent(cloner.clone(revision.getContent()));
+        cv.setSectionOrder(new ArrayList<>(revision.getSectionOrder()));
+        return CvMapper.toResponse(masterCvRepository.saveAndFlush(cv));
     }
 }

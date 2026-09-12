@@ -3,9 +3,11 @@ package com.cvflow.cv.controller;
 import com.cvflow.common.response.ApiResponse;
 import com.cvflow.common.response.ApiResponses;
 import com.cvflow.cv.dto.request.CreateCvRequest;
+import com.cvflow.cv.dto.request.RestoreRevisionRequest;
 import com.cvflow.cv.dto.request.UpdateCvRequest;
 import com.cvflow.cv.dto.response.CvResponse;
 import com.cvflow.cv.dto.response.CvSummaryResponse;
+import com.cvflow.cv.dto.response.RevisionResponse;
 import com.cvflow.cv.service.CvService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -58,5 +60,18 @@ public class CvController {
     @PostMapping("/{cvId}/duplicate")
     public ResponseEntity<ApiResponse<CvResponse>> duplicate(@PathVariable UUID cvId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponses.success(cvService.duplicate(cvId)));
+    }
+
+    @GetMapping("/{cvId}/revisions")
+    public ResponseEntity<ApiResponse<List<RevisionResponse>>> listRevisions(@PathVariable UUID cvId) {
+        return ResponseEntity.ok(ApiResponses.success(cvService.listRevisions(cvId)));
+    }
+
+    @PostMapping("/{cvId}/revisions/{revisionId}/restore")
+    public ResponseEntity<ApiResponse<CvResponse>> restoreRevision(
+            @PathVariable UUID cvId,
+            @PathVariable UUID revisionId,
+            @Valid @RequestBody RestoreRevisionRequest request) {
+        return ResponseEntity.ok(ApiResponses.success(cvService.restoreRevision(cvId, revisionId, request)));
     }
 }

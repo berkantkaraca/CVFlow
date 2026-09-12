@@ -7,6 +7,8 @@ import { DangerButton, Field, PrimaryButton, SecondaryButton, TextInput } from '
 import { CvDocumentEditor } from '../features/editor/CvDocumentEditor'
 import { useCv, useUpdateCv } from '../features/cvs/cvApi'
 import { useCreateLanguage, useDeleteLanguage, useLanguages } from '../features/languages/languageApi'
+import { RevisionPanel } from '../features/revisions/RevisionPanel'
+import { useMasterRevisions, useRestoreMasterRevision } from '../features/revisions/revisionApi'
 import { toastFromError, useUiStore } from '../stores/uiStore'
 import type { LanguageCode, TemplateCode } from '../types/cv'
 
@@ -24,6 +26,8 @@ export function CvEditorPage() {
   const { data: cv, isLoading, isError, refetch } = useCv(cvId)
   const updateCv = useUpdateCv(cvId)
   const { data: languages } = useLanguages(cvId)
+  const { data: revisions, isLoading: revisionsLoading } = useMasterRevisions(cvId)
+  const restoreRevision = useRestoreMasterRevision(cvId)
   const createLanguage = useCreateLanguage(cvId)
   const deleteLanguage = useDeleteLanguage(cvId)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -104,6 +108,19 @@ export function CvEditorPage() {
         onReload={() => void refetch()}
         previewTemplate={previewTemplate}
         previewLanguage="EN"
+      />
+
+      <RevisionPanel
+        revisions={revisions}
+        isLoading={revisionsLoading}
+        currentVersion={cv.version}
+        previewTemplate={previewTemplate}
+        previewLanguage="EN"
+        restoring={restoreRevision.isPending}
+        onRestore={async (revisionId, version) => {
+          await restoreRevision.mutateAsync({ revisionId, version })
+          void refetch()
+        }}
       />
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">

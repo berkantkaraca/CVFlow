@@ -28,6 +28,7 @@ import com.cvflow.cv.model.Experience;
 import com.cvflow.cv.model.LanguageCode;
 import com.cvflow.cv.model.TemplateCode;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
+import com.cvflow.cv.service.RevisionService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -53,6 +54,9 @@ class AiServiceTest {
     @Mock
     private CvAccessService cvAccessService;
 
+    @Mock
+    private RevisionService revisionService;
+
     private AiService service;
     private final UUID versionId = UUID.randomUUID();
     private final UUID suggestionId = UUID.randomUUID();
@@ -67,7 +71,8 @@ class AiServiceTest {
                 cvAccessService,
                 new CvFieldValidator(),
                 new SuggestionApplier(),
-                new CvContentDiffer());
+                new CvContentDiffer(),
+                revisionService);
     }
 
     @Test

@@ -17,6 +17,7 @@ import com.cvflow.common.exception.SuggestionNotFoundException;
 import com.cvflow.common.security.CvAccessService;
 import com.cvflow.cv.entity.CvLanguageVersion;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
+import com.cvflow.cv.service.RevisionService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class AiService {
     private final CvFieldValidator fieldValidator;
     private final SuggestionApplier applier;
     private final CvContentDiffer differ;
+    private final RevisionService revisionService;
 
     @Transactional
     public AiSuggestionResponse improve(ImproveRequest request) {
@@ -78,6 +80,9 @@ public class AiService {
         CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
         List<CvAiSuggestion> pending =
                 suggestionRepository.findAllByLanguageVersionIdAndStatus(version.getId(), AiSuggestionStatus.PENDING);
+        if (!pending.isEmpty()) {
+            revisionService.captureLanguage(version);
+        }
         for (CvAiSuggestion suggestion : pending) {
             applier.apply(version.getContent(), suggestion.getPayload());
             suggestion.setStatus(AiSuggestionStatus.ACCEPTED);
@@ -101,6 +106,7 @@ public class AiService {
         CvAiSuggestion suggestion = loadOwned(suggestionId);
         requirePending(suggestion);
         CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(suggestion.getLanguageVersionId());
+        revisionService.captureLanguage(version);
         applier.apply(version.getContent(), suggestion.getPayload());
         languageVersionRepository.saveAndFlush(version);
         suggestion.setStatus(AiSuggestionStatus.ACCEPTED);

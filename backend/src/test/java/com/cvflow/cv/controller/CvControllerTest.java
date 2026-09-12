@@ -88,6 +88,28 @@ class CvControllerTest {
                 .andExpect(jsonPath("$.success").value(true));
     }
 
+    @Test
+    void listRevisionsReturns200() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(cvService.listRevisions(id)).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/cvs/" + id + "/revisions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void restoreRevisionReturns200() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(cvService.restoreRevision(eq(id), any(), any())).thenReturn(sampleResponse());
+
+        mvc.perform(post("/api/v1/cvs/" + id + "/revisions/" + UUID.randomUUID() + "/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
     private CvResponse sampleResponse() {
         return new CvResponse(
                 UUID.randomUUID(),

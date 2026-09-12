@@ -103,6 +103,28 @@ class LanguageVersionControllerTest {
                 .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
     }
 
+    @Test
+    void listRevisionsReturns200() throws Exception {
+        when(languageVersionService.listRevisions(cvId, versionId)).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/cvs/" + cvId + "/languages/" + versionId + "/revisions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void restoreRevisionReturns200() throws Exception {
+        when(languageVersionService.restoreRevision(eq(cvId), eq(versionId), any(), any()))
+                .thenReturn(sampleResponse());
+
+        mvc.perform(post("/api/v1/cvs/" + cvId + "/languages/" + versionId + "/revisions/" + UUID.randomUUID()
+                                        + "/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
     private LanguageVersionResponse sampleResponse() {
         return new LanguageVersionResponse(
                 versionId,

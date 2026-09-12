@@ -43,6 +43,9 @@ class CvServiceTest {
     private CvLanguageVersionRepository languageVersionRepository;
 
     @Mock
+    private RevisionService revisionService;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @Mock
@@ -60,7 +63,8 @@ class CvServiceTest {
                 currentUserService,
                 cvAccessService,
                 new CvContentCloner(new ObjectMapper()),
-                new SectionOrderValidator());
+                new SectionOrderValidator(),
+                revisionService);
         lenient().when(currentUserService.getCurrentUserId()).thenReturn(userId);
     }
 
@@ -125,8 +129,7 @@ class CvServiceTest {
     }
 
     @Test
-    void duplicateCopiesLanguageVersions() {
-        MasterCv source = ownedCv(2L);
+    void duplicateCopiesLanguageVersions() {        MasterCv source = ownedCv(2L);
         when(cvAccessService.getOwnedCv(cvId)).thenReturn(source);
         CvLanguageVersion english = languageVersion(LanguageCode.EN);
         when(languageVersionRepository.findAllByMasterCvId(cvId)).thenReturn(List.of(english));
@@ -135,6 +138,41 @@ class CvServiceTest {
         cvService.duplicate(cvId);
 
         verify(languageVersionRepository).save(any(CvLanguageVersion.class));
+    }
+
+    @Test
+    void updateCapturesRevisionBeforeMutating() {
+        MasterCv cv = ownedCv(5L);
+        when(cvAccessService.getOwnedCv(cvId)).thenReturn(cv);
+        when(masterCvRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+
+        UpdateCvRequest request = new UpdateCvRequest(
+                "New", CvContent.empty(), CvSection.defaultOrder(), 5L);
+        cvService.update(cvId, request);
+
+        verify(revisionService).captureMaster(cv);
+    }
+
+    @Test
+    void restoreAppliesRevisionContent() {
+        MasterCv cv = ownedCv(2L);
+        when(cvAccessService.getOwnedCv(cvId)).thenReturn(cv);
+        com.cvflow.cv.entity.CvContentRevision revision = new com.cvflow.cv.entity.CvContentRevision();
+        revision.setId(UUID.randomUUID());
+        CvContent oldContent = CvContent.empty();
+        oldContent.setSummary("old summary");
+        revision.setContent(oldContent);
+        revision.setSectionOrder(List.of(CvSection.SUMMARY));
+        when(revisionService.load(
+                        com.cvflow.cv.model.RevisionDocumentType.MASTER_CV, cvId, revision.getId()))
+                .thenReturn(revision);
+        when(masterCvRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+
+        CvResponse restored = cvService.restoreRevision(
+                cvId, revision.getId(), new com.cvflow.cv.dto.request.RestoreRevisionRequest(2L));
+
+        assertEquals("old summary", restored.content().getSummary());
+        verify(revisionService).captureMaster(cv);
     }
 
     private MasterCv ownedCv(long version) {

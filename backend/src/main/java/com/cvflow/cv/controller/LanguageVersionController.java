@@ -3,9 +3,11 @@ package com.cvflow.cv.controller;
 import com.cvflow.common.response.ApiResponse;
 import com.cvflow.common.response.ApiResponses;
 import com.cvflow.cv.dto.request.CreateLanguageVersionRequest;
+import com.cvflow.cv.dto.request.RestoreRevisionRequest;
 import com.cvflow.cv.dto.request.UpdateLanguageVersionRequest;
 import com.cvflow.cv.dto.response.LanguageVersionResponse;
 import com.cvflow.cv.dto.response.LanguageVersionSummaryResponse;
+import com.cvflow.cv.dto.response.RevisionResponse;
 import com.cvflow.cv.service.LanguageVersionService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -60,5 +62,22 @@ public class LanguageVersionController {
             @PathVariable UUID cvId, @PathVariable UUID languageVersionId) {
         languageVersionService.delete(cvId, languageVersionId);
         return ResponseEntity.ok(ApiResponses.success());
+    }
+
+    @GetMapping("/{languageVersionId}/revisions")
+    public ResponseEntity<ApiResponse<List<RevisionResponse>>> listRevisions(
+            @PathVariable UUID cvId, @PathVariable UUID languageVersionId) {
+        return ResponseEntity.ok(
+                ApiResponses.success(languageVersionService.listRevisions(cvId, languageVersionId)));
+    }
+
+    @PostMapping("/{languageVersionId}/revisions/{revisionId}/restore")
+    public ResponseEntity<ApiResponse<LanguageVersionResponse>> restoreRevision(
+            @PathVariable UUID cvId,
+            @PathVariable UUID languageVersionId,
+            @PathVariable UUID revisionId,
+            @Valid @RequestBody RestoreRevisionRequest request) {
+        return ResponseEntity.ok(ApiResponses.success(
+                languageVersionService.restoreRevision(cvId, languageVersionId, revisionId, request)));
     }
 }

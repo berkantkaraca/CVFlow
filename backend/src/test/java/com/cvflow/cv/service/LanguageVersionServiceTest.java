@@ -39,6 +39,9 @@ class LanguageVersionServiceTest {
     @Mock
     private CvAccessService cvAccessService;
 
+    @Mock
+    private RevisionService revisionService;
+
     private LanguageVersionService service;
     private final UUID cvId = UUID.randomUUID();
     private final UUID versionId = UUID.randomUUID();
@@ -49,7 +52,8 @@ class LanguageVersionServiceTest {
                 languageVersionRepository,
                 cvAccessService,
                 new CvContentCloner(new ObjectMapper()),
-                new SectionOrderValidator());
+                new SectionOrderValidator(),
+                revisionService);
     }
 
     @Test

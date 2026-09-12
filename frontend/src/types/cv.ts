@@ -140,6 +140,14 @@ export interface LanguageVersion extends LanguageVersionSummary {
   createdAt: string
 }
 
+export interface Revision {
+  id: string
+  version: number
+  content: CvContent
+  sectionOrder: CvSection[]
+  createdAt: string
+}
+
 export type AiOperation = 'TRANSLATE' | 'IMPROVE' | 'REWRITE'
 export type AiSuggestionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
 
