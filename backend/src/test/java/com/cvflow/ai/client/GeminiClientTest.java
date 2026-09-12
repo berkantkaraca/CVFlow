@@ -113,6 +113,7 @@ class GeminiClientTest {
 
     private static String geminiBody(String innerText) {
         String escaped = innerText.replace("\\", "\\\\").replace("\"", "\\\"");
-        return "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"" + escaped + "\"}]}}]}";
+        return "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"" + escaped
+                + "\",\"thoughtSignature\":\"abc\"}]}}],\"usageMetadata\":{\"totalTokenCount\":1}}";
     }
 }

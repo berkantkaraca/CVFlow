@@ -169,7 +169,7 @@ The model should be configurable through application configuration.
 Default model:
 
 ```text
-gemini-2.5-flash
+gemini-3.6-flash
 ```
 
 Do not hardcode the API key.
@@ -1326,7 +1326,7 @@ app:
   ai:
     gemini:
       api-key: ${GEMINI_API_KEY}
-      model: gemini-2.5-flash
+      model: gemini-3.6-flash
       base-url: https://generativelanguage.googleapis.com
 ```
 
@@ -2091,7 +2091,7 @@ app:
   ai:
     gemini:
       api-key: ${GEMINI_API_KEY}
-      model: gemini-2.5-flash
+      model: gemini-3.6-flash
       base-url: https://generativelanguage.googleapis.com
 ```
 

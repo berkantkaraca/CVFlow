@@ -36,7 +36,7 @@ Backend: Java 25, Spring Boot 4.1.x, Spring Web / Data JPA / Validation, Hiberna
 PostgreSQL 17, Flyway, JUnit 5, Mockito, Testcontainers, springdoc-openapi.
 Frontend: React 19, TypeScript, Vite, React Router, TanStack Query, Zustand,
 React Hook Form, Zod, Tailwind CSS 4, Vitest.
-AI: Google Gemini (`gemini-2.5-flash` by default) via Spring `RestClient`.
+AI: Google Gemini (`gemini-3.6-flash` by default) via Spring `RestClient`.
 PDF: server-rendered HTML/CSS → Chromium (Gotenberg service) → PDF bytes.
 
 ## Requirements
@@ -135,7 +135,7 @@ Error codes: `VALIDATION_ERROR`, `INVALID_FIELD`, `INVALID_SECTION_ORDER`, `INVA
 ## AI setup
 
 Set `GEMINI_API_KEY`. Model and endpoint are configurable in `application.yml`
-(`app.ai.gemini.model`, default `gemini-2.5-flash`).
+(`app.ai.gemini.model`, default `gemini-3.6-flash`).
 Prompts forbid inventing facts; only allowlisted section fields can be modified
 (`CvFieldValidator`, no reflection).
 

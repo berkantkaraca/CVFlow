@@ -51,7 +51,8 @@ public class GeminiClient implements AiClient {
         } catch (Exception ex) {
             throw new AiServiceException("AI_INVALID_RESPONSE", "CV content could not be serialized");
         }
-        String translated = generateText(promptBuilder.translateContent(contentJson, sourceLanguage, targetLanguage));
+        String translated = generateText(GeminiApi.Request.ofDocument(
+                promptBuilder.translateContent(contentJson, sourceLanguage, targetLanguage)));
         try {
             CvContent parsed = objectMapper.readValue(translated, CvContent.class);
             if (parsed == null) {
@@ -66,7 +67,7 @@ public class GeminiClient implements AiClient {
     }
 
     private String generate(String prompt) {
-        String text = generateText(prompt);
+        String text = generateText(GeminiApi.Request.of(prompt));
         try {
             GeminiApi.SuggestedText parsed = objectMapper.readValue(text, GeminiApi.SuggestedText.class);
             if (parsed.suggested() == null || parsed.suggested().isBlank()) {
@@ -80,14 +81,14 @@ public class GeminiClient implements AiClient {
         }
     }
 
-    private String generateText(String prompt) {
+    private String generateText(GeminiApi.Request geminiRequest) {
         GeminiApi.Response response;
         try {
             response = restClient
                     .post()
                     .uri(properties.baseUrl() + "/v1beta/models/" + properties.model() + ":generateContent")
                     .header("x-goog-api-key", properties.apiKey())
-                    .body(GeminiApi.Request.of(prompt))
+                    .body(geminiRequest)
                     .retrieve()
                     .body(GeminiApi.Response.class);
         } catch (RestClientException ex) {
