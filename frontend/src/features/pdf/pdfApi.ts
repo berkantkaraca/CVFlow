@@ -4,3 +4,7 @@ import type { LanguageCode } from '../../types/cv'
 export function exportPdf(cvId: string, languageCode: LanguageCode): Promise<void> {
   return apiDownload(`/cvs/${cvId}/export/pdf`, { languageCode }, `cv-${languageCode.toLowerCase()}.pdf`)
 }
+
+export function exportDocx(cvId: string, languageCode: LanguageCode): Promise<void> {
+  return apiDownload(`/cvs/${cvId}/export/docx`, { languageCode }, `cv-${languageCode.toLowerCase()}.docx`)
+}

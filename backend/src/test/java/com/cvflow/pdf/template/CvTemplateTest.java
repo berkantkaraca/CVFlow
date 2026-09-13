@@ -15,8 +15,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class CvTemplateTest {
-    private final TemplateRenderer renderer =
-            new TemplateRenderer(List.of(new ModernCvTemplate(), new MinimalCvTemplate(), new ProfessionalCvTemplate()));
+    private final TemplateRenderer renderer = new TemplateRenderer(
+            List.of(new ModernCvTemplate(), new MinimalCvTemplate(), new ProfessionalCvTemplate(), new AtsTemplate()));
 
     @Test
     void allTemplatesRenderWithoutData() {
@@ -81,7 +81,6 @@ class CvTemplateTest {
         assertTrue(html.contains("Backend Developer"));
         assertTrue(html.contains("jane@example.com"));
     }
-
     @Test
     void templatesHaveDistinctStyles() {
         String modern = renderer.render(CvContent.empty(), CvSection.defaultOrder(), TemplateCode.MODERN, LanguageCode.EN);
@@ -89,9 +88,16 @@ class CvTemplateTest {
                 renderer.render(CvContent.empty(), CvSection.defaultOrder(), TemplateCode.MINIMAL, LanguageCode.EN);
         String professional = renderer.render(
                 CvContent.empty(), CvSection.defaultOrder(), TemplateCode.PROFESSIONAL, LanguageCode.EN);
+        String ats = renderer.render(CvContent.empty(), CvSection.defaultOrder(), TemplateCode.ATS, LanguageCode.EN);
 
-        assertTrue(!modern.equals(minimal));
-        assertTrue(!modern.equals(professional));
-        assertEquals(3, List.of(modern, minimal, professional).stream().distinct().count());
+        assertEquals(4, List.of(modern, minimal, professional, ats).stream().distinct().count());
+    }
+
+    @Test
+    void atsTemplateIsPlain() {
+        String ats = renderer.render(CvContent.empty(), CvSection.defaultOrder(), TemplateCode.ATS, LanguageCode.EN);
+
+        assertTrue(!ats.contains("1d4ed8"));
+        assertTrue(ats.contains("Arial"));
     }
 }

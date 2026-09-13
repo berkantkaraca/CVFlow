@@ -1,5 +1,5 @@
 export type LanguageCode = 'TR' | 'EN'
-export type TemplateCode = 'MODERN' | 'MINIMAL' | 'PROFESSIONAL'
+export type TemplateCode = 'MODERN' | 'MINIMAL' | 'PROFESSIONAL' | 'ATS'
 export type CvSection =
   | 'SUMMARY'
   | 'EXPERIENCE'

@@ -140,6 +140,7 @@ POST   /api/v1/ai/suggestions/{id}/reject   REJECTED (no content change)
 POST   /api/v1/ai/suggestions/accept-all    apply all PENDING (one transaction)
 
 POST   /api/v1/cvs/{cvId}/export/pdf        { languageCode } → application/pdf
+POST   /api/v1/cvs/{cvId}/export/docx       { languageCode } → Word document (.docx)
 ```
 
 Error codes: `VALIDATION_ERROR`, `INVALID_FIELD`, `INVALID_SECTION_ORDER`, `INVALID_JSON`,
@@ -157,8 +158,11 @@ Prompts forbid inventing facts; only allowlisted section fields can be modified
 
 ## PDF setup
 
-Templates `MODERN` / `MINIMAL` / `PROFESSIONAL` render in the backend
+Templates `MODERN` / `MINIMAL` / `PROFESSIONAL` / `ATS` render in the backend
 (`pdf/template`) and a matching preview renders in the frontend.
+`ATS` is an ultra-plain single-column layout for applicant tracking systems.
+DOCX export (`POST .../export/docx`) renders a plain single-column Word document
+via Apache POI — no external service needed.
 Conversion needs Chromium: `docker compose up -d gotenberg`
 (or set `PDF_GOTENBERG_URL` to a reachable instance).
 

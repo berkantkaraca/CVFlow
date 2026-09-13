@@ -15,7 +15,7 @@ import type { LanguageCode, TemplateCode } from '../types/cv'
 const languageSchema = z.object({
   languageCode: z.enum(['TR', 'EN']),
   name: z.string().trim().min(1, 'Name is required').max(150),
-  templateCode: z.enum(['MODERN', 'MINIMAL', 'PROFESSIONAL']),
+  templateCode: z.enum(['MODERN', 'MINIMAL', 'PROFESSIONAL', 'ATS']),
 })
 type LanguageForm = z.infer<typeof languageSchema>
 
@@ -86,7 +86,7 @@ export function CvEditorPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-slate-500">Preview style:</span>
-        {(['MODERN', 'MINIMAL', 'PROFESSIONAL'] as TemplateCode[]).map((t) => (
+        {(['MODERN', 'MINIMAL', 'PROFESSIONAL', 'ATS'] as TemplateCode[]).map((t) => (
           <button
             key={t}
             onClick={() => setPreviewTemplate(t)}
@@ -165,6 +165,7 @@ export function CvEditorPage() {
                 <option value="MODERN">MODERN</option>
                 <option value="MINIMAL">MINIMAL</option>
                 <option value="PROFESSIONAL">PROFESSIONAL</option>
+                <option value="ATS">ATS (plain)</option>
               </select>
             </Field>
             <div className="flex justify-end gap-2">

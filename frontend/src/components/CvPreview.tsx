@@ -147,12 +147,14 @@ const frameClass: Record<TemplateCode, string> = {
   MODERN: 'rounded-lg border border-slate-200 bg-white',
   MINIMAL: 'border border-slate-200 bg-white',
   PROFESSIONAL: 'rounded border border-slate-300 bg-white',
+  ATS: 'border border-slate-200 bg-white',
 }
 
 const headerClass: Record<TemplateCode, string> = {
   MODERN: 'rounded-t-lg bg-blue-700 px-6 py-5 text-white',
   MINIMAL: 'px-6 py-5 text-center',
   PROFESSIONAL: 'border-b-2 border-slate-900 px-6 py-4',
+  ATS: 'px-6 py-4',
 }
 
 export function CvPreview({
@@ -187,7 +189,9 @@ export function CvPreview({
                     ? 'mb-2 text-center text-xs uppercase tracking-widest'
                     : template === 'MODERN'
                       ? 'mb-2 border-b border-blue-100 text-xs font-semibold uppercase tracking-wider text-blue-700'
-                      : 'mb-2 border-b border-slate-300 text-xs font-semibold uppercase'
+                      : template === 'ATS'
+                        ? 'mb-2 text-xs uppercase'
+                        : 'mb-2 border-b border-slate-300 text-xs font-semibold uppercase'
                 }
               >
                 {label(section, language)}

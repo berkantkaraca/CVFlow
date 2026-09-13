@@ -4,7 +4,7 @@ import { SecondaryButton } from '../components/ui'
 import { AiFieldButtons, SuggestionPanel } from '../features/ai/SuggestionPanel'
 import { CvDocumentEditor } from '../features/editor/CvDocumentEditor'
 import { useLanguage, useLanguages, useUpdateLanguage } from '../features/languages/languageApi'
-import { exportPdf } from '../features/pdf/pdfApi'
+import { exportDocx, exportPdf } from '../features/pdf/pdfApi'
 import { RevisionPanel } from '../features/revisions/RevisionPanel'
 import { useLanguageRevisions, useRestoreLanguageRevision } from '../features/revisions/revisionApi'
 import { toastFromError, useUiStore } from '../stores/uiStore'
@@ -19,6 +19,7 @@ export function LanguageEditorPage() {
   const restoreRevision = useRestoreLanguageRevision(cvId, languageId)
   const updateLanguage = useUpdateLanguage(cvId, languageId)
   const [exporting, setExporting] = useState(false)
+  const [exportingDocx, setExportingDocx] = useState(false)
 
   async function onExport() {
     if (!language) return
@@ -30,6 +31,19 @@ export function LanguageEditorPage() {
       notify(toastFromError(e, 'PDF export failed'), 'error')
     } finally {
       setExporting(false)
+    }
+  }
+
+  async function onExportDocx() {
+    if (!language) return
+    setExportingDocx(true)
+    try {
+      await exportDocx(cvId, language.languageCode)
+      notify('DOCX downloaded', 'success')
+    } catch (e) {
+      notify(toastFromError(e, 'DOCX export failed'), 'error')
+    } finally {
+      setExportingDocx(false)
     }
   }
 
@@ -102,9 +116,13 @@ export function LanguageEditorPage() {
               <option value="MODERN">MODERN</option>
               <option value="MINIMAL">MINIMAL</option>
               <option value="PROFESSIONAL">PROFESSIONAL</option>
+              <option value="ATS">ATS (plain)</option>
             </select>
             <SecondaryButton onClick={() => void onExport()} disabled={exporting}>
               {exporting ? 'Exporting…' : '⬇ Export PDF'}
+            </SecondaryButton>
+            <SecondaryButton onClick={() => void onExportDocx()} disabled={exportingDocx}>
+              {exportingDocx ? 'Exporting…' : '⬇ Export DOCX'}
             </SecondaryButton>
           </>
         }
