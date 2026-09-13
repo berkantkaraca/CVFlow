@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import { z } from 'zod'
 import { Dialog } from '../components/Dialog'
 import { ConfirmDialog, IconButton } from '../components/ConfirmDialog'
-import { Field, PrimaryButton, SecondaryButton, TextInput } from '../components/ui'
+import { DangerButton, Field, PrimaryButton, SecondaryButton, TextInput } from '../components/ui'
 import { DuplicateIcon, PencilIcon, TrashIcon } from '../components/icons'
 import { useCreateCv, useCvs, useDeleteCv, useDuplicateCv } from '../features/cvs/cvApi'
 import { downloadBackup, useImportBackup } from '../features/backup/backupApi'
@@ -24,6 +24,9 @@ export function CvListPage() {
   const t = useT()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [selected, setSelected] = useState<string[]>([])
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const {
     register,
@@ -54,9 +57,37 @@ export function CvListPage() {
       await deleteCv.mutateAsync(deleteTarget.id)
       notify(t('cvlist.deleted'), 'info')
       setDeleteTarget(null)
+      setSelected((prev) => prev.filter((id) => id !== deleteTarget.id))
     } catch (e) {
       notify(toastFromError(e, t('error.generic')), 'error')
     }
+  }
+
+  async function onBulkDelete() {
+    setBulkDeleting(true)
+    let ok = 0
+    for (const id of selected) {
+      try {
+        await deleteCv.mutateAsync(id)
+        ok++
+      } catch {
+        /* continue with the rest, report below */
+      }
+    }
+    setBulkDeleting(false)
+    setBulkConfirmOpen(false)
+    setSelected([])
+    void refetch()
+    if (ok === selected.length) notify(t('cvlist.deletedCount').replace('{n}', String(ok)), 'info')
+    else notify(`${t('cvlist.deletedCount').replace('{n}', String(ok))} — ${t('error.generic')}`, 'error')
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  function toggleSelectAll(ids: string[]) {
+    setSelected((prev) => (prev.length === ids.length ? [] : ids))
   }
 
   async function onDuplicate(id: string) {
@@ -74,6 +105,11 @@ export function CvListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t('cvlist.title')}</h1>
         <div className="flex gap-2">
+          {selected.length > 0 && (
+            <DangerButton onClick={() => setBulkConfirmOpen(true)} disabled={bulkDeleting}>
+              {t('cvlist.deleteSelected')} ({selected.length})
+            </DangerButton>
+          )}
           <SecondaryButton
             onClick={() => {
               downloadBackup()
@@ -122,6 +158,18 @@ export function CvListPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-paper text-xs uppercase text-ink-500">
             <tr>
+              <th className="w-10 px-4 py-2">
+                <input
+                  type="checkbox"
+                  title={t('cvlist.selectAll')}
+                  aria-label={t('cvlist.selectAll')}
+                  checked={(cvs?.length ?? 0) > 0 && selected.length === (cvs?.length ?? 0)}
+                  ref={(el) => {
+                    if (el) el.indeterminate = selected.length > 0 && selected.length < (cvs?.length ?? 0)
+                  }}
+                  onChange={() => toggleSelectAll((cvs ?? []).map((cv) => cv.id))}
+                />
+              </th>
               <th className="px-4 py-2">{t('cvlist.name')}</th>
               <th className="px-4 py-2">{t('cvlist.updated')}</th>
               <th className="px-4 py-2">{t('cvlist.version')}</th>
@@ -130,7 +178,15 @@ export function CvListPage() {
           </thead>
           <tbody>
             {(cvs ?? []).map((cv) => (
-              <tr key={cv.id} className="border-t border-line">
+              <tr key={cv.id} className={`border-t border-line ${selected.includes(cv.id) ? 'bg-accent-50' : ''}`}>
+                <td className="px-4 py-2">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(cv.id)}
+                    onChange={() => toggleSelect(cv.id)}
+                    aria-label={cv.name}
+                  />
+                </td>
                 <td className="px-4 py-2 font-medium text-ink-900">{cv.name}</td>
                 <td className="px-4 py-2 text-ink-500">{new Date(cv.updatedAt).toLocaleString()}</td>
                 <td className="px-4 py-2 text-ink-500">v{cv.version}</td>
@@ -155,6 +211,16 @@ export function CvListPage() {
           <p className="px-4 py-6 text-center text-sm text-ink-500">{t('cvlist.empty')}</p>
         )}
       </div>
+      {bulkConfirmOpen && (
+        <ConfirmDialog
+          title={t('confirm.deleteTitle')}
+          message={`${t('cvlist.confirmBulk')} (${selected.length})`}
+          confirmLabel={t('cvlist.deleteSelected')}
+          pending={bulkDeleting}
+          onConfirm={() => void onBulkDelete()}
+          onCancel={() => setBulkConfirmOpen(false)}
+        />
+      )}
       {deleteTarget && (
         <ConfirmDialog
           title={t('confirm.deleteTitle')}
