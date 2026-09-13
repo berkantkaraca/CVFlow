@@ -109,7 +109,7 @@ export function CoverLetterEditorPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex items-center gap-2 text-sm text-ink-500">
         <Link to="/cvs" className="hover:underline">
           {t('nav.cvs')}
         </Link>
@@ -118,10 +118,10 @@ export function CoverLetterEditorPage() {
           {t('editor.masterCv')}
         </Link>
         <span>/</span>
-        <span className="font-medium text-slate-800">{letter.title}</span>
+        <span className="font-medium text-ink-900">{letter.title}</span>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('letter.title')}>
             <TextInput value={form.title} onChange={(e) => edit({ title: e.target.value })} />
@@ -173,7 +173,7 @@ export function CoverLetterEditorPage() {
           </SecondaryButton>
         </div>
         {draftBody !== null && (
-          <div className="mt-3 rounded border border-violet-200 bg-white p-3 text-sm">
+          <div className="mt-3 rounded border border-violet-200 bg-card p-3 text-sm">
             <p className="mb-2 whitespace-pre-wrap">{draftBody}</p>
             <SecondaryButton
               onClick={() => {

@@ -12,21 +12,21 @@ export function AtsCard({ cvId, languageId }: { cvId: string; languageId: string
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <h2 className="mb-2 font-semibold">{t('ats.title')}</h2>
-      {isLoading && <p className="text-sm text-slate-500">{t('common.loading')}</p>}
+      {isLoading && <p className="text-sm text-ink-500">{t('common.loading')}</p>}
       {data && (
         <>
           <p className={`text-3xl font-bold ${color(data.score)}`}>
             {data.score}
-            <span className="text-sm font-normal text-slate-400">/100</span>
+            <span className="text-sm font-normal text-ink-300">/100</span>
           </p>
           <ul className="mt-2 flex flex-col gap-1">
             {data.checks.map((check) => (
               <li key={check.code} className="flex gap-2 text-sm">
                 <span>{check.passed ? '✅' : '⬜'}</span>
-                <span className={check.passed ? '' : 'text-slate-500'}>{check.label}</span>
-                <span className="ml-auto text-xs text-slate-400">{check.detail}</span>
+                <span className={check.passed ? '' : 'text-ink-500'}>{check.label}</span>
+                <span className="ml-auto text-xs text-ink-300">{check.detail}</span>
               </li>
             ))}
           </ul>

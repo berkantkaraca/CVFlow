@@ -45,14 +45,14 @@ export function ShareCard({ cvId, languageId }: { cvId: string; languageId: stri
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <h2 className="mb-2 font-semibold">{t('share.title')}</h2>
-      <p className="mb-2 text-sm text-slate-500">{t('share.hint')}</p>
+      <p className="mb-2 text-sm text-ink-500">{t('share.hint')}</p>
       <div className="mb-2 flex gap-2">
         <select
           value={expiry}
           onChange={(e) => setExpiry(e.target.value)}
-          className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="rounded-md border border-line px-2 py-1.5 text-sm"
         >
           <option value="">{t('share.never')}</option>
           <option value="7">{t('share.days7')}</option>
@@ -62,12 +62,12 @@ export function ShareCard({ cvId, languageId }: { cvId: string; languageId: stri
           {t('share.create')}
         </SecondaryButton>
       </div>
-      {isLoading && <p className="text-sm text-slate-500">{t('common.loading')}</p>}
+      {isLoading && <p className="text-sm text-ink-500">{t('common.loading')}</p>}
       <ul className="flex flex-col gap-1">
         {(links ?? []).map((link) => (
           <li
             key={link.id}
-            className="flex items-center gap-2 rounded border border-slate-100 px-3 py-2 font-mono text-xs"
+            className="flex items-center gap-2 rounded border border-line px-3 py-2 font-mono text-xs"
           >
             <span className="truncate">{publicUrl(link.token)}</span>
             <span className="ml-auto flex shrink-0 gap-2">
@@ -78,7 +78,7 @@ export function ShareCard({ cvId, languageId }: { cvId: string; languageId: stri
         ))}
       </ul>
       {(links?.length ?? 0) === 0 && !isLoading && (
-        <p className="text-sm text-slate-500">{t('share.empty')}</p>
+        <p className="text-sm text-ink-500">{t('share.empty')}</p>
       )}
     </div>
   )

@@ -68,7 +68,7 @@ export function CvListPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('cvlist.title')}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('cvlist.title')}</h1>
         <div className="flex gap-2">
           <SecondaryButton
             onClick={() => {
@@ -114,9 +114,9 @@ export function CvListPage() {
         </div>
       </div>
       {isLoading && <p>{t('common.loading')}</p>}
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-line bg-card shadow-[0_1px_2px_rgba(20,32,46,0.05)]">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="bg-paper text-xs uppercase text-ink-500">
             <tr>
               <th className="px-4 py-2">{t('cvlist.name')}</th>
               <th className="px-4 py-2">{t('cvlist.updated')}</th>
@@ -126,14 +126,14 @@ export function CvListPage() {
           </thead>
           <tbody>
             {(cvs ?? []).map((cv) => (
-              <tr key={cv.id} className="border-t border-slate-100">
+              <tr key={cv.id} className="border-t border-line">
                 <td className="px-4 py-2 font-medium">
-                  <Link to={`/cvs/${cv.id}`} className="text-blue-700 hover:underline">
+                  <Link to={`/cvs/${cv.id}`} className="text-accent-800 hover:underline">
                     {cv.name}
                   </Link>
                 </td>
-                <td className="px-4 py-2 text-slate-500">{new Date(cv.updatedAt).toLocaleString()}</td>
-                <td className="px-4 py-2 text-slate-500">v{cv.version}</td>
+                <td className="px-4 py-2 text-ink-500">{new Date(cv.updatedAt).toLocaleString()}</td>
+                <td className="px-4 py-2 text-ink-500">v{cv.version}</td>
                 <td className="flex justify-end gap-2 px-4 py-2">
                   <SecondaryButton onClick={() => void onDuplicate(cv.id)}>{t('cvlist.duplicate')}</SecondaryButton>
                   <DangerButton onClick={() => void onDelete(cv.id, cv.name)}>{t('common.delete')}</DangerButton>
@@ -143,7 +143,7 @@ export function CvListPage() {
           </tbody>
         </table>
         {(cvs?.length ?? 0) === 0 && !isLoading && (
-          <p className="px-4 py-6 text-center text-sm text-slate-500">{t('cvlist.empty')}</p>
+          <p className="px-4 py-6 text-center text-sm text-ink-500">{t('cvlist.empty')}</p>
         )}
       </div>
       {dialogOpen && (

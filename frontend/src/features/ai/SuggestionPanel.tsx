@@ -49,7 +49,7 @@ export function AiFieldButtons({
         onClick={() => void run('improve')}
         disabled={busy}
         title="AI Improve"
-        className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+        className="rounded border border-line px-2 py-0.5 text-xs text-slate-600 hover:bg-paper disabled:opacity-50"
       >
         {t('ai.improve')}
       </button>
@@ -57,7 +57,7 @@ export function AiFieldButtons({
         onClick={() => void run('rewrite')}
         disabled={busy}
         title="AI Rewrite"
-        className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+        className="rounded border border-line px-2 py-0.5 text-xs text-slate-600 hover:bg-paper disabled:opacity-50"
       >
         {t('ai.rewrite')}
       </button>
@@ -147,15 +147,15 @@ export function SuggestionPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-700">
+      <div className="rounded-lg border border-line bg-card p-4">
+        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-700">
           {t('ai.translateTitle')}
         </h3>
         <div className="flex gap-2">
           <select
             value={sourceId}
             onChange={(e) => setSourceId(e.target.value)}
-            className="flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="flex-1 rounded-md border border-line px-2 py-1.5 text-sm"
           >
             <option value="">{t('ai.fromLanguage')}</option>
             {others.map((l) => (
@@ -178,7 +178,7 @@ export function SuggestionPanel({
               onChange={(e) => setJobDescription(e.target.value)}
               rows={4}
               placeholder={t('ai.jobDescriptionPh')}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-md border border-line px-3 py-2 text-sm"
             />
             <SecondaryButton
               onClick={() => void handleTailor()}
@@ -201,16 +201,16 @@ export function SuggestionPanel({
             </SecondaryButton>
           )}
         </div>
-        {isLoading && <p className="text-sm text-slate-500">{t('common.loading')}</p>}
+        {isLoading && <p className="text-sm text-ink-500">{t('common.loading')}</p>}
         {(suggestions ?? []).map((s) => (
-          <div key={s.id} className="mb-2 rounded border border-violet-200 bg-white p-3 text-sm">
-            <div className="mb-1 flex gap-2 text-xs text-slate-500">
+          <div key={s.id} className="mb-2 rounded border border-violet-200 bg-card p-3 text-sm">
+            <div className="mb-1 flex gap-2 text-xs text-ink-500">
               <span className="rounded bg-violet-100 px-1.5 py-0.5 font-medium text-violet-700">{s.operation}</span>
               <span>
                 {s.payload.section} · {s.payload.field}
               </span>
             </div>
-            <p className="text-slate-500 line-through">{s.payload.original || '(empty)'}</p>
+            <p className="text-ink-500 line-through">{s.payload.original || '(empty)'}</p>
             <p className="font-medium text-green-700">{s.payload.suggested || '(empty)'}</p>
             <div className="mt-2 flex gap-2">
               <SecondaryButton onClick={() => void handleAccept(s.id)} disabled={accept.isPending}>
@@ -223,7 +223,7 @@ export function SuggestionPanel({
           </div>
         ))}
         {(suggestions?.length ?? 0) === 0 && !isLoading && (
-          <p className="text-sm text-slate-500">{t('ai.noPending')}</p>
+          <p className="text-sm text-ink-500">{t('ai.noPending')}</p>
         )}
       </div>
     </div>

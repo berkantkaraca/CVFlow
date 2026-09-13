@@ -38,11 +38,11 @@ export function RevisionPanel({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-line bg-card p-4">
       <h2 className="mb-2 font-semibold">{t('history.title')}</h2>
-      {isLoading && <p className="text-sm text-slate-500">{t('common.loading')}</p>}
+      {isLoading && <p className="text-sm text-ink-500">{t('common.loading')}</p>}
       {(revisions?.length ?? 0) === 0 && !isLoading && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-ink-500">
           {t('history.empty')}
         </p>
       )}
@@ -50,10 +50,10 @@ export function RevisionPanel({
         {(revisions ?? []).map((r) => (
           <li
             key={r.id}
-            className="flex items-center gap-3 rounded border border-slate-100 px-3 py-2 text-sm"
+            className="flex items-center gap-3 rounded border border-line px-3 py-2 text-sm"
           >
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs">v{r.version}</span>
-            <span className="text-slate-500">{new Date(r.createdAt).toLocaleString()}</span>
+            <span className="rounded bg-paper px-1.5 py-0.5 font-mono text-xs">v{r.version}</span>
+            <span className="text-ink-500">{new Date(r.createdAt).toLocaleString()}</span>
             <span className="ml-auto flex gap-2">
               <SecondaryButton onClick={() => setPreviewId(r.id)}>{t('history.preview')}</SecondaryButton>
               <SecondaryButton onClick={() => void handleRestore(r)} disabled={restoring}>

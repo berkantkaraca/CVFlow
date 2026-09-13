@@ -40,11 +40,11 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto mt-16 w-full max-w-md rounded-lg border border-slate-200 bg-white p-6">
-      <h1 className="mb-1 text-xl font-bold">{t('auth.registerTitle')}</h1>
-      <p className="mb-4 text-sm text-slate-500">
+    <div className="mx-auto mt-16 w-full max-w-md rounded-2xl border border-line bg-card p-8 shadow-[0_8px_30px_rgba(20,32,46,0.08)]">
+      <h1 className="mb-1 text-xl font-bold tracking-tight">{t('auth.registerTitle')}</h1>
+      <p className="mb-4 text-sm text-ink-500">
         {t('auth.hasAccount')}{' '}
-        <Link to="/login" className="text-blue-700 hover:underline">
+        <Link to="/login" className="text-accent-800 hover:underline">
           {t('auth.loginLink')}
         </Link>
       </p>

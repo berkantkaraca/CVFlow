@@ -80,7 +80,7 @@ function DragHandle({ listId, index }: { listId: string; index: number }) {
     <span
       {...dragSource(listId, index)}
       title="Drag to reorder"
-      className="cursor-grab rounded px-1 text-slate-400 hover:bg-slate-200 active:cursor-grabbing"
+      className="cursor-grab rounded px-1 text-ink-300 hover:bg-paper active:cursor-grabbing"
     >
       ⠿
     </span>
@@ -203,13 +203,13 @@ export function CvDocumentEditor({
         <input
           value={name}
           onChange={(e) => markDirty({ name: e.target.value })}
-          className="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 text-lg font-semibold"
+          className="min-w-0 flex-1 rounded-xl border border-line bg-card px-4 py-2.5 text-lg font-semibold tracking-tight"
         />
         {headerActions}
         <PrimaryButton onClick={() => void save()} disabled={saving || !dirty || conflict}>
           {saving ? t('common.saving') : t('common.save')}
         </PrimaryButton>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-ink-500">
           {conflict ? t('editor.paused') : dirty ? (saving ? t('common.saving') : t('editor.unsaved')) : lastSaved ? `${t('editor.savedAt')} ${lastSaved}` : `v${version}`}
         </span>
       </div>
@@ -292,11 +292,11 @@ export function CvDocumentEditor({
                           },
                         }),
                       )}
-                      className="rounded border border-slate-200 p-3"
+                      className="rounded border border-line p-3"
                     >
                       <div className="mb-1 flex items-center gap-1">
                         <DragHandle listId="experiences" index={ei} />
-                        <span className="text-xs text-slate-400">{t('editor.dragHint')}</span>
+                        <span className="text-xs text-ink-300">{t('editor.dragHint')}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <Field label={t('editor.company')}>
@@ -355,7 +355,7 @@ export function CvDocumentEditor({
                           </label>                        </div>
                       </div>
                       <div className="mt-2">
-                        <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">{t('editor.bullets')}</span>
+                        <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-ink-500">{t('editor.bullets')}</span>
                         {asArray(exp.description).map((bullet, bi) => (
                           <div key={bi} className="mb-1 flex gap-1">
                             <TextInput
@@ -424,11 +424,11 @@ export function CvDocumentEditor({
                           },
                         }),
                       )}
-                      className="rounded border border-slate-200 p-3"
+                      className="rounded border border-line p-3"
                     >
                       <div className="mb-1 flex items-center gap-1">
                         <DragHandle listId="education" index={edi} />
-                        <span className="text-xs text-slate-400">{t('editor.dragHint')}</span>
+                        <span className="text-xs text-ink-300">{t('editor.dragHint')}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <Field label={t('editor.institution')}>
@@ -486,11 +486,11 @@ export function CvDocumentEditor({
                           },
                         }),
                       )}
-                      className="rounded border border-slate-200 p-3"
+                      className="rounded border border-line p-3"
                     >
                       <div className="mb-1 flex items-center gap-1">
                         <DragHandle listId="projects" index={pi} />
-                        <span className="text-xs text-slate-400">{t('editor.dragHint')}</span>
+                        <span className="text-xs text-ink-300">{t('editor.dragHint')}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <Field label={t('editor.pname')}>
@@ -564,7 +564,7 @@ export function CvDocumentEditor({
               {section === 'CERTIFICATIONS' && (
                 <>
                   {asArray(content.certifications).map((c: Certification) => (
-                    <div key={c.id} className="rounded border border-slate-200 p-3">
+                    <div key={c.id} className="rounded border border-line p-3">
                       <div className="grid grid-cols-2 gap-2">
                         <Field label={t('editor.pname')}>
                           <TextInput value={val(c.name)} onChange={(e) => markDirty({ content: { ...content, certifications: updateEntry(content.certifications, c.id!, { name: e.target.value }) } })} />
@@ -613,7 +613,7 @@ export function CvDocumentEditor({
           ))}
           <SectionCard title="Custom sections">
             {(content.customSections ?? []).map((custom: CustomSection, ci: number) => (
-              <div key={custom.id} {...dropTarget('customs', ci, moveCustomTo)} className="rounded border border-slate-200 p-3">
+              <div key={custom.id} {...dropTarget('customs', ci, moveCustomTo)} className="rounded border border-line p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <DragHandle listId="customs" index={ci} />
                   <div className="flex-1">
@@ -673,7 +673,7 @@ export function CvDocumentEditor({
         </div>
 
         <div className="xl:sticky xl:top-4 xl:self-start">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">{t('editor.livePreview')}</h3>
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-500">{t('editor.livePreview')}</h3>
           <CvPreview content={content} sectionOrder={sectionOrder} template={previewTemplate} language={previewLanguage} />
         </div>
       </div>

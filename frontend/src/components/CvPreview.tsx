@@ -144,17 +144,17 @@ function hasContent(section: CvSection, content: CvContent): boolean {
 }
 
 const frameClass: Record<TemplateCode, string> = {
-  MODERN: 'rounded-lg border border-slate-200 bg-white',
-  MINIMAL: 'border border-slate-200 bg-white',
-  PROFESSIONAL: 'rounded border border-slate-300 bg-white',
-  ATS: 'border border-slate-200 bg-white',
+  MODERN: 'overflow-hidden rounded-xl border border-line bg-white shadow-[0_8px_30px_rgba(20,32,46,0.08)]',
+  MINIMAL: 'border border-line bg-white shadow-[0_8px_30px_rgba(20,32,46,0.06)]',
+  PROFESSIONAL: 'overflow-hidden rounded-lg border border-line bg-white shadow-[0_8px_30px_rgba(20,32,46,0.08)]',
+  ATS: 'border border-line bg-white shadow-[0_8px_30px_rgba(20,32,46,0.06)]',
 }
 
 const headerClass: Record<TemplateCode, string> = {
-  MODERN: 'rounded-t-lg bg-blue-700 px-6 py-5 text-white',
-  MINIMAL: 'px-6 py-5 text-center',
-  PROFESSIONAL: 'border-b-2 border-slate-900 px-6 py-4',
-  ATS: 'px-6 py-4',
+  MODERN: 'bg-blue-800 px-7 py-6 text-white',
+  MINIMAL: 'px-7 py-6 text-center',
+  PROFESSIONAL: 'border-b-[3px] border-ink-900 px-7 py-5',
+  ATS: 'px-7 py-5',
 }
 
 export function CvPreview({

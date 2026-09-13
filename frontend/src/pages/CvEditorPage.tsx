@@ -109,26 +109,26 @@ export function CvEditorPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex items-center gap-2 text-sm text-ink-500">
         <Link to="/cvs" className="hover:underline">
           {t('nav.cvs')}
         </Link>
         <span>/</span>
-        <span className="font-medium text-slate-800">{t('editor.masterCv')}</span>
+        <span className="font-medium text-ink-900">{t('editor.masterCv')}</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-slate-500">{t('editor.previewStyle')}</span>
+        <span className="text-sm text-ink-500">{t('editor.previewStyle')}</span>
         {(['MODERN', 'MINIMAL', 'PROFESSIONAL', 'ATS'] as TemplateCode[]).map((code) => (
           <button
             key={code}
             onClick={() => setPreviewTemplate(code)}
-            className={`rounded border px-2 py-1 text-xs ${previewTemplate === code ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white'}`}
+            className={`rounded border px-2 py-1 text-xs ${previewTemplate === code ? 'border-slate-900 bg-ink-900 text-white' : 'border-line bg-card'}`}
           >
             {code}
           </button>
         ))}
-        <span className="ml-auto text-xs text-slate-400">{t('editor.previewOnly')}</span>
+        <span className="ml-auto text-xs text-ink-300">{t('editor.previewOnly')}</span>
       </div>
 
       <CvDocumentEditor
@@ -156,19 +156,19 @@ export function CvEditorPage() {
         }}
       />
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-semibold">{t('editor.languagesTitle')}</h2>
           <PrimaryButton onClick={() => setDialogOpen(true)}>{t('editor.addLanguage')}</PrimaryButton>
         </div>
         <ul className="flex flex-col gap-1">
           {(languages ?? []).map((l: { id: string; languageCode: LanguageCode; name: string; templateCode: string }) => (
-            <li key={l.id} className="flex items-center gap-3 rounded border border-slate-100 px-3 py-2 text-sm">
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs">{l.languageCode}</span>
-              <Link to={`/cvs/${cvId}/languages/${l.id}`} className="font-medium text-blue-700 hover:underline">
+            <li key={l.id} className="flex items-center gap-3 rounded border border-line px-3 py-2 text-sm">
+              <span className="rounded bg-paper px-1.5 py-0.5 font-mono text-xs">{l.languageCode}</span>
+              <Link to={`/cvs/${cvId}/languages/${l.id}`} className="font-medium text-accent-800 hover:underline">
                 {l.name}
               </Link>
-              <span className="text-slate-400">{l.templateCode}</span>
+              <span className="text-ink-300">{l.templateCode}</span>
               <DangerButton onClick={() => void onDeleteLanguage(l.id, l.name)} className="ml-auto">
                 {t('common.delete')}
               </DangerButton>
@@ -176,11 +176,11 @@ export function CvEditorPage() {
           ))}
         </ul>
         {(languages?.length ?? 0) === 0 && (
-          <p className="text-sm text-slate-500">{t('editor.noLanguages')}</p>
+          <p className="text-sm text-ink-500">{t('editor.noLanguages')}</p>
         )}
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-semibold">{t('letter.title')}</h2>
           <PrimaryButton onClick={() => void onAddLetter()} disabled={createLetter.isPending}>
@@ -189,8 +189,8 @@ export function CvEditorPage() {
         </div>
         <ul className="flex flex-col gap-1">
           {(letters ?? []).map((l) => (
-            <li key={l.id} className="flex items-center gap-3 rounded border border-slate-100 px-3 py-2 text-sm">
-              <Link to={`/cvs/${cvId}/cover-letters/${l.id}`} className="font-medium text-blue-700 hover:underline">
+            <li key={l.id} className="flex items-center gap-3 rounded border border-line px-3 py-2 text-sm">
+              <Link to={`/cvs/${cvId}/cover-letters/${l.id}`} className="font-medium text-accent-800 hover:underline">
                 {l.title}
               </Link>
               <DangerButton onClick={() => void onDeleteLetter(l.id, l.title)} className="ml-auto">
@@ -200,7 +200,7 @@ export function CvEditorPage() {
           ))}
         </ul>
         {(letters?.length ?? 0) === 0 && (
-          <p className="text-sm text-slate-500">{t('letter.empty')}</p>
+          <p className="text-sm text-ink-500">{t('letter.empty')}</p>
         )}
       </div>
 
@@ -208,7 +208,7 @@ export function CvEditorPage() {
         <Dialog title={t('editor.newLangTitle')} onClose={() => setDialogOpen(false)}>
           <form onSubmit={handleSubmit(onCreateLanguage)} className="flex flex-col gap-3">
             <Field label={t('editor.language')}>
-              <select {...register('languageCode')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+              <select {...register('languageCode')} className="w-full rounded-md border border-line px-3 py-2 text-sm">
                 {(Object.keys(LANGUAGE_NAMES) as LanguageCode[]).map((code) => (
                   <option key={code} value={code}>
                     {code} — {LANGUAGE_NAMES[code]}
@@ -221,7 +221,7 @@ export function CvEditorPage() {
             </Field>
             {errors.name && <p className="text-sm text-red-600">{t('cvlist.nameRequired')}</p>}
             <Field label={t('editor.template')}>
-              <select {...register('templateCode')} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+              <select {...register('templateCode')} className="w-full rounded-md border border-line px-3 py-2 text-sm">
                 <option value="MODERN">MODERN</option>
                 <option value="MINIMAL">MINIMAL</option>
                 <option value="PROFESSIONAL">PROFESSIONAL</option>

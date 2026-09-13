@@ -82,7 +82,7 @@ export function LanguageEditorPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex items-center gap-2 text-sm text-ink-500">
         <Link to="/cvs" className="hover:underline">
           {t('nav.cvs')}
         </Link>
@@ -91,7 +91,7 @@ export function LanguageEditorPage() {
           {t('editor.masterCv')}
         </Link>
         <span>/</span>
-        <span className="font-medium text-slate-800">
+        <span className="font-medium text-ink-900">
           {language.languageCode} — {language.name}
         </span>
       </div>
@@ -114,7 +114,7 @@ export function LanguageEditorPage() {
             <select
               value={language.templateCode}
               onChange={(e) => void onTemplateChange(e.target.value as TemplateCode)}
-              className="rounded-md border border-slate-300 px-2 py-2 text-sm"
+              className="rounded-md border border-line px-2 py-2 text-sm"
               title={t('editor.template')}
             >
               <option value="MODERN">MODERN</option>

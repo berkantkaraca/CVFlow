@@ -8,8 +8,8 @@ export function UsageCard() {
   if (isLoading || !data) return null
   const pct = Math.min(100, Math.round((data.aiCallsUsed / Math.max(1, data.aiCallsLimit)) * 100))
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">
+    <div className="rounded-lg border border-line bg-card p-4">
+      <p className="text-xs uppercase tracking-wide text-ink-500">
         {t('billing.usage')} · {data.plan}
       </p>
       <div className="mt-1 h-2 rounded bg-slate-200">

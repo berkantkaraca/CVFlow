@@ -3,14 +3,14 @@ import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'rea
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">{label}</span>
       {children}
     </label>
   )
 }
 
 const inputClass =
-  'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none'
+  'w-full rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink-900 placeholder:text-ink-300 focus:border-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-100'
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />
@@ -27,7 +27,7 @@ export function PrimaryButton({
   return (
     <button
       {...props}
-      className={`rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50 ${props.className ?? ''}`}
+      className={`rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-ink-950 disabled:opacity-50 ${props.className ?? ''}`}
     >
       {children}
     </button>
@@ -41,7 +41,7 @@ export function SecondaryButton({
   return (
     <button
       {...props}
-      className={`rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 ${props.className ?? ''}`}
+      className={`rounded-lg border border-line bg-card px-3 py-1.5 text-sm font-medium text-ink-700 transition hover:border-ink-300 hover:bg-paper disabled:opacity-50 ${props.className ?? ''}`}
     >
       {children}
     </button>
@@ -55,7 +55,7 @@ export function DangerButton({
   return (
     <button
       {...props}
-      className={`rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 ${props.className ?? ''}`}
+      className={`rounded-lg border border-red-200 bg-card px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50 ${props.className ?? ''}`}
     >
       {children}
     </button>
@@ -72,9 +72,9 @@ export function SectionCard({
   children: ReactNode
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-700">{title}</h3>
+    <div className="rounded-xl border border-line bg-card p-5 shadow-[0_1px_2px_rgba(20,32,46,0.05)]">
+      <div className="mb-4 flex items-center justify-between border-b border-line pb-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-500">{title}</h3>
         {actions && <div className="flex gap-1">{actions}</div>}
       </div>
       <div className="flex flex-col gap-3">{children}</div>

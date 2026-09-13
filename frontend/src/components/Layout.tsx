@@ -5,8 +5,14 @@ import { useUiStore } from '../stores/uiStore'
 
 function navClass(active: boolean): string {
   return active
-    ? 'rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white'
-    : 'rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200'
+    ? 'border-b-2 border-accent-700 pb-3 text-sm font-semibold text-ink-900'
+    : 'border-b-2 border-transparent pb-3 text-sm font-medium text-ink-500 transition hover:text-ink-900'
+}
+
+const toastClass: Record<string, string> = {
+  error: 'border-red-200 bg-white text-red-800',
+  success: 'border-accent-100 bg-white text-accent-800',
+  info: 'border-line bg-ink-900 text-white',
 }
 
 export function Layout() {
@@ -21,14 +27,19 @@ export function Layout() {
   const setLocale = useLocaleStore((s) => s.setLocale)
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-          <Link to="/" className="text-lg font-bold tracking-tight">
-            CVFlow
+    <div className="min-h-screen bg-paper text-ink-900">
+      <header className="sticky top-0 z-40 border-b border-line bg-card/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-end gap-8 px-6 pt-4">
+          <Link to="/" className="flex items-center gap-2.5 pb-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900 text-sm font-bold text-white">
+              C
+            </span>
+            <span className="text-[17px] font-bold tracking-tight">
+              CVFlow
+            </span>
           </Link>
           {!isAuthPage && (
-            <nav className="flex gap-1">
+            <nav className="flex gap-6">
               <Link to="/" className={navClass(location.pathname === '/')}>
                 {t('nav.dashboard')}
               </Link>
@@ -37,30 +48,30 @@ export function Layout() {
               </Link>
             </nav>
           )}
-          <div className="ml-auto flex items-center gap-3 text-sm">
+          <div className="ml-auto flex items-center gap-3 pb-2.5 text-sm">
             <button
               onClick={() => setLocale(locale === 'tr' ? 'en' : 'tr')}
-              className="rounded-md border border-slate-300 px-2 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+              className="rounded-md px-2 py-1.5 text-xs font-semibold text-ink-500 transition hover:bg-paper hover:text-ink-900"
               title="Dil / Language"
             >
               {locale === 'tr' ? 'EN' : 'TR'}
             </button>
             {email ? (
               <>
-                <span className="text-slate-500">{email}</span>
+                <span className="hidden max-w-48 truncate text-ink-500 sm:inline">{email}</span>
                 <button
                   onClick={() => {
                     logout()
                     navigate('/login')
                   }}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+                  className="rounded-lg border border-line px-3 py-1.5 font-medium text-ink-700 transition hover:border-ink-300 hover:bg-paper"
                 >
                   {t('nav.logout')}
                 </button>
               </>
             ) : (
               !isAuthPage && (
-                <Link to="/login" className="font-medium text-blue-700 hover:underline">
+                <Link to="/login" className="font-semibold text-accent-800 hover:underline">
                   {t('nav.login')}
                 </Link>
               )
@@ -68,19 +79,17 @@ export function Layout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         <Outlet />
       </main>
-      <div className="fixed bottom-4 right-4 flex flex-col gap-2">
-        {toasts.map((t) => (
+      <div className="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+        {toasts.map((toast) => (
           <button
-            key={t.id}
-            onClick={() => dismiss(t.id)}
-            className={`rounded-md px-4 py-2 text-sm shadow-lg ${
-              t.kind === 'error' ? 'bg-red-600 text-white' : t.kind === 'success' ? 'bg-green-600 text-white' : 'bg-slate-800 text-white'
-            }`}
+            key={toast.id}
+            onClick={() => dismiss(toast.id)}
+            className={`rounded-xl border px-4 py-3 text-left text-sm shadow-lg transition ${toastClass[toast.kind] ?? toastClass.info}`}
           >
-            {t.message}
+            {toast.message}
           </button>
         ))}
       </div>
