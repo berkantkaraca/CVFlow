@@ -1,4 +1,4 @@
-export type LanguageCode = 'TR' | 'EN'
+export type LanguageCode = 'TR' | 'EN' | 'DE' | 'FR' | 'ES'
 export type TemplateCode = 'MODERN' | 'MINIMAL' | 'PROFESSIONAL' | 'ATS'
 export type CvSection =
   | 'SUMMARY'
@@ -41,6 +41,7 @@ export interface PersonalInfo {
   website?: string | null
   linkedin?: string | null
   github?: string | null
+  photoUrl?: string | null
 }
 
 export interface Experience {
@@ -99,6 +100,12 @@ export interface CvLink {
   url?: string | null
 }
 
+export interface CustomSection {
+  id?: string | null
+  title?: string | null
+  items?: string[]
+}
+
 export interface CvContent {
   personal?: PersonalInfo | null
   summary?: string | null
@@ -109,6 +116,7 @@ export interface CvContent {
   languages?: CvLanguage[]
   certifications?: Certification[]
   links?: CvLink[]
+  customSections?: CustomSection[]
 }
 
 export interface CvSummary {

@@ -100,4 +100,25 @@ class CvTemplateTest {
         assertTrue(!ats.contains("1d4ed8"));
         assertTrue(ats.contains("Arial"));
     }
+
+    @Test
+    void rendersCustomSectionsAfterBuiltIns() {
+        CvContent content = CvContent.empty();
+        content.setSummary("hello");
+        com.cvflow.cv.model.CustomSection custom = new com.cvflow.cv.model.CustomSection();
+        custom.setId(java.util.UUID.randomUUID());
+        custom.setTitle("Hobbies");
+        custom.setItems(new java.util.ArrayList<>(java.util.List.of("Chess")));
+        content.setCustomSections(new java.util.ArrayList<>(java.util.List.of(custom)));
+
+        String html = renderer.render(
+                content,
+                java.util.List.of(CvSection.SUMMARY),
+                TemplateCode.MODERN,
+                LanguageCode.EN);
+
+        assertTrue(html.contains("Hobbies"));
+        assertTrue(html.contains("Chess"));
+        assertTrue(html.indexOf("hello") < html.indexOf("Hobbies"));
+    }
 }

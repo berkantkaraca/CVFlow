@@ -56,6 +56,26 @@ class DocxRendererTest {
     }
 
     @Test
+    void rendersCustomSections() throws Exception {
+        CvContent content = CvContent.empty();
+        com.cvflow.cv.model.CustomSection custom = new com.cvflow.cv.model.CustomSection();
+        custom.setId(UUID.randomUUID());
+        custom.setTitle("Hobbies");
+        custom.setItems(new ArrayList<>(List.of("Chess")));
+        content.setCustomSections(new ArrayList<>(List.of(custom)));
+
+        byte[] docx = renderer.render(content, CvSection.defaultOrder(), LanguageCode.EN);
+
+        try (XWPFDocument document = new XWPFDocument(new java.io.ByteArrayInputStream(docx))) {
+            String text = document.getParagraphs().stream()
+                    .map(p -> p.getText())
+                    .reduce("", (a, b) -> a + "\n" + b);
+            assertTrue(text.contains("Hobbies"));
+            assertTrue(text.contains("Chess"));
+        }
+    }
+
+    @Test
     void respectsSectionOrder() throws Exception {
         CvContent content = CvContent.empty();
         content.setSummary("the summary");

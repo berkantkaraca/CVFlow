@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '../../i18n'
 import { CvPreview } from '../../components/CvPreview'
 import { Dialog } from '../../components/Dialog'
 import { SecondaryButton } from '../../components/ui'
@@ -23,25 +24,26 @@ export function RevisionPanel({
   restoring: boolean
 }) {
   const notify = useUiStore((s) => s.notify)
+  const t = useT()
   const [previewId, setPreviewId] = useState<string | null>(null)
   const preview = revisions?.find((r) => r.id === previewId) ?? null
 
   async function handleRestore(revision: Revision) {
     try {
       await onRestore(revision.id, currentVersion)
-      notify(`Restored version v${revision.version}`, 'success')
+      notify(`${t('history.restored')} v${revision.version}`, 'success')
     } catch (e) {
-      notify(toastFromError(e, 'Restore failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="mb-2 font-semibold">Version history</h2>
-      {isLoading && <p className="text-sm text-slate-500">Loading…</p>}
+      <h2 className="mb-2 font-semibold">{t('history.title')}</h2>
+      {isLoading && <p className="text-sm text-slate-500">{t('common.loading')}</p>}
       {(revisions?.length ?? 0) === 0 && !isLoading && (
         <p className="text-sm text-slate-500">
-          No revisions yet. Every save and AI accept creates a restorable snapshot (last 20 kept).
+          {t('history.empty')}
         </p>
       )}
       <ul className="flex flex-col gap-1">
@@ -53,16 +55,16 @@ export function RevisionPanel({
             <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs">v{r.version}</span>
             <span className="text-slate-500">{new Date(r.createdAt).toLocaleString()}</span>
             <span className="ml-auto flex gap-2">
-              <SecondaryButton onClick={() => setPreviewId(r.id)}>Preview</SecondaryButton>
+              <SecondaryButton onClick={() => setPreviewId(r.id)}>{t('history.preview')}</SecondaryButton>
               <SecondaryButton onClick={() => void handleRestore(r)} disabled={restoring}>
-                Restore
+                {t('history.restore')}
               </SecondaryButton>
             </span>
           </li>
         ))}
       </ul>
       {preview && (
-        <Dialog title={`Revision v${preview.version}`} onClose={() => setPreviewId(null)}>
+        <Dialog title={`v${preview.version}`} onClose={() => setPreviewId(null)}>
           <div className="max-h-[60vh] overflow-y-auto">
             <CvPreview
               content={preview.content}
@@ -79,7 +81,7 @@ export function RevisionPanel({
               }}
               disabled={restoring}
             >
-              Restore this version
+              {t('history.restoreThis')}
             </SecondaryButton>
           </div>
         </Dialog>

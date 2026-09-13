@@ -175,6 +175,9 @@ export function CvPreview({
   return (
     <div className={frameClass[template]}>
       <div className={headerClass[template]}>
+        {personal.photoUrl && (
+          <img src={personal.photoUrl} alt="" className="mb-2 h-24 w-24 rounded-full object-cover" />
+        )}
         <h1 className="text-2xl font-bold">{personal.fullName || 'Untitled CV'}</h1>
         {personal.title && <p className="text-sm opacity-90">{personal.title}</p>}
         {contacts.length > 0 && <p className="mt-1 text-xs opacity-80">{contacts.join(' · ')}</p>}
@@ -199,6 +202,19 @@ export function CvPreview({
               <CvPreviewSection section={section} content={content} />
             </section>
           ) : null,
+        )}
+        {(content.customSections ?? []).map(
+          (custom, i) =>
+            (custom.items ?? []).length > 0 && (
+              <section key={custom.id ?? i}>
+                <h2 className="mb-2 text-xs font-semibold uppercase">{custom.title || '—'}</h2>
+                <ul className="ml-5 list-disc text-sm">
+                  {custom.items!.map((item, j) => (
+                    <li key={j}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+            ),
         )}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { useLogout, useSession } from '../features/auth/authApi'
+import { useLocaleStore, useT } from '../i18n'
 import { useUiStore } from '../stores/uiStore'
 
 function navClass(active: boolean): string {
@@ -15,6 +16,9 @@ export function Layout() {
   const dismiss = useUiStore((s) => s.dismiss)
   const email = useSession((s) => s.email)
   const logout = useLogout()
+  const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
+  const setLocale = useLocaleStore((s) => s.setLocale)
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -26,14 +30,21 @@ export function Layout() {
           {!isAuthPage && (
             <nav className="flex gap-1">
               <Link to="/" className={navClass(location.pathname === '/')}>
-                Dashboard
+                {t('nav.dashboard')}
               </Link>
               <Link to="/cvs" className={navClass(location.pathname.startsWith('/cvs'))}>
-                CVs
+                {t('nav.cvs')}
               </Link>
             </nav>
           )}
           <div className="ml-auto flex items-center gap-3 text-sm">
+            <button
+              onClick={() => setLocale(locale === 'tr' ? 'en' : 'tr')}
+              className="rounded-md border border-slate-300 px-2 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+              title="Dil / Language"
+            >
+              {locale === 'tr' ? 'EN' : 'TR'}
+            </button>
             {email ? (
               <>
                 <span className="text-slate-500">{email}</span>
@@ -44,13 +55,13 @@ export function Layout() {
                   }}
                   className="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
                 >
-                  Logout
+                  {t('nav.logout')}
                 </button>
               </>
             ) : (
               !isAuthPage && (
                 <Link to="/login" className="font-medium text-blue-700 hover:underline">
-                  Log in
+                  {t('nav.login')}
                 </Link>
               )
             )}

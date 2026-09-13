@@ -22,6 +22,7 @@ public class AtsTemplate extends AbstractCvTemplate {
                 .cv-page { max-width: 760px; margin: 0 auto; padding: 24px 32px; }
                 .cv-header { margin-bottom: 16px; }
                 .cv-header h1 { font-size: 22px; }
+                .cv-photo { width: 96px; height: 96px; object-fit: cover; }
                 .cv-title { font-size: 13px; margin-top: 2px; }
                 .cv-contacts { font-size: 11px; margin-top: 4px; }
                 .cv-section { margin-bottom: 14px; }

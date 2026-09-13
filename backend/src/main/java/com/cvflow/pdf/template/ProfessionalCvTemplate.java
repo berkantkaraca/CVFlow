@@ -18,6 +18,7 @@ public class ProfessionalCvTemplate extends AbstractCvTemplate {
                 .cv-page { max-width: 780px; margin: 0 auto; padding: 28px 36px; }
                 .cv-header { border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 18px; }
                 .cv-header h1 { font-size: 24px; }
+                .cv-photo { width: 96px; height: 96px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; }
                 .cv-title { font-size: 14px; color: #334155; margin-top: 2px; }
                 .cv-contacts { font-size: 12px; color: #475569; margin-top: 6px; }
                 .cv-section { margin-bottom: 16px; }

@@ -3,6 +3,7 @@ package com.cvflow.pdf.template;
 import com.cvflow.cv.model.Certification;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.model.CustomSection;
 import com.cvflow.cv.model.Education;
 import com.cvflow.cv.model.Experience;
 import com.cvflow.cv.model.Language;
@@ -22,6 +23,11 @@ public abstract class AbstractCvTemplate implements CvTemplate {
         List<String> contacts = contacts(personal);
         StringBuilder html = new StringBuilder();
         html.append("<header class=\"cv-header\">");
+        if (!isBlank(personal.getPhotoUrl())) {
+            html.append("<img class=\"cv-photo\" src=\"")
+                    .append(esc(personal.getPhotoUrl()))
+                    .append("\" alt=\"\">");
+        }
         html.append("<h1>").append(esc(nameOf(personal))).append("</h1>");
         if (!isBlank(personal.getTitle())) {
             html.append("<p class=\"cv-title\">").append(esc(personal.getTitle())).append("</p>");
@@ -55,6 +61,16 @@ public abstract class AbstractCvTemplate implements CvTemplate {
                         .append(esc(titleOf(section, language)))
                         .append("</h2>")
                         .append(sectionHtml)
+                        .append("</section>");
+            }
+        }
+        for (CustomSection custom : nullSafe(safe.getCustomSections())) {
+            String customHtml = customHtml(custom);
+            if (!customHtml.isBlank()) {
+                html.append("<section class=\"cv-section cv-custom\"><h2>")
+                        .append(esc(isBlank(custom.getTitle()) ? "—" : custom.getTitle()))
+                        .append("</h2>")
+                        .append(customHtml)
                         .append("</section>");
             }
         }
@@ -218,8 +234,7 @@ public abstract class AbstractCvTemplate implements CvTemplate {
         return html.toString();
     }
 
-    private String linksHtml(List<Link> links) {
-        StringBuilder html = new StringBuilder();
+    private String linksHtml(List<Link> links) {        StringBuilder html = new StringBuilder();
         for (Link l : nullSafe(links)) {
             html.append("<div class=\"cv-inline-item\"><span class=\"cv-item-title\">")
                     .append(esc(orDash(l.getLabel())))
@@ -229,6 +244,20 @@ public abstract class AbstractCvTemplate implements CvTemplate {
             }
             html.append("</div>");
         }
+        return html.toString();
+    }
+
+    private String customHtml(CustomSection custom) {
+        if (custom.getItems() == null || custom.getItems().isEmpty()) {
+            return "";
+        }
+        StringBuilder html = new StringBuilder("<ul>");
+        for (String item : custom.getItems()) {
+            if (!isBlank(item)) {
+                html.append("<li>").append(esc(item)).append("</li>");
+            }
+        }
+        html.append("</ul>");
         return html.toString();
     }
 

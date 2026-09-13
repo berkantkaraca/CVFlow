@@ -18,6 +18,7 @@ public class ModernCvTemplate extends AbstractCvTemplate {
                 .cv-page { max-width: 780px; margin: 0 auto; padding: 32px 36px; }
                 .cv-header { background: #1d4ed8; color: #ffffff; border-radius: 8px; padding: 24px 28px; margin-bottom: 24px; }
                 .cv-header h1 { font-size: 28px; margin-bottom: 4px; }
+                .cv-photo { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; margin-bottom: 8px; }
                 .cv-title { font-size: 15px; opacity: 0.9; }
                 .cv-contacts { font-size: 12px; margin-top: 8px; opacity: 0.9; }
                 .cv-section { margin-bottom: 20px; }

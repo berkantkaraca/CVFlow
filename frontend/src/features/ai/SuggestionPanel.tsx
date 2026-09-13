@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '../../i18n'
 import { SecondaryButton } from '../../components/ui'
 import { useUiStore, toastFromError } from '../../stores/uiStore'
 import type { CvSection, LanguageVersionSummary } from '../../types/cv'
@@ -26,6 +27,7 @@ export function AiFieldButtons({
   value: string
 }) {
   const notify = useUiStore((s) => s.notify)
+  const t = useT()
   const improve = useImprove(languageVersionId)
   const rewrite = useRewrite(languageVersionId)
 
@@ -33,9 +35,9 @@ export function AiFieldButtons({
     try {
       const mutate = kind === 'improve' ? improve.mutateAsync : rewrite.mutateAsync
       await mutate({ languageVersionId, section, entityId, field, content: value })
-      notify(`${kind === 'improve' ? 'Improve' : 'Rewrite'} suggestion created — review below`, 'success')
+      notify(`${t(kind === 'improve' ? 'ai.improve' : 'ai.rewrite')} — ${t('ai.suggestionCreated')}`, 'success')
     } catch (e) {
-      notify(toastFromError(e, `${kind} failed`), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
@@ -48,7 +50,7 @@ export function AiFieldButtons({
         title="AI Improve"
         className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-50"
       >
-        ✨ Improve
+        {t('ai.improve')}
       </button>
       <button
         onClick={() => void run('rewrite')}
@@ -56,7 +58,7 @@ export function AiFieldButtons({
         title="AI Rewrite"
         className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-50"
       >
-        ✍️ Rewrite
+        {t('ai.rewrite')}
       </button>
     </>
   )
@@ -74,6 +76,7 @@ export function SuggestionPanel({
   onApplied: () => void
 }) {
   const notify = useUiStore((s) => s.notify)
+  const t = useT()
   const { data: suggestions, isLoading, refetch } = useSuggestions(languageVersionId, 'PENDING')
   const accept = useAcceptSuggestion(languageVersionId)
   const reject = useRejectSuggestion(languageVersionId)
@@ -86,29 +89,29 @@ export function SuggestionPanel({
   async function handleAccept(id: string) {
     try {
       await accept.mutateAsync(id)
-      notify('Suggestion accepted', 'success')
+      notify(t('ai.accepted'), 'success')
       onApplied()
     } catch (e) {
-      notify(toastFromError(e, 'Accept failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
   async function handleReject(id: string) {
     try {
       await reject.mutateAsync(id)
-      notify('Suggestion rejected', 'info')
+      notify(t('ai.rejected'), 'info')
     } catch (e) {
-      notify(toastFromError(e, 'Reject failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
   async function handleAcceptAll() {
     try {
       const result = await acceptAll.mutateAsync()
-      notify(`${result.length} suggestions accepted`, 'success')
+      notify(`${result.length} ${t('ai.acceptedAll')}`, 'success')
       onApplied()
     } catch (e) {
-      notify(toastFromError(e, 'Accept all failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
@@ -119,10 +122,10 @@ export function SuggestionPanel({
         sourceLanguageVersionId: sourceId,
         targetLanguageVersionId: languageVersionId,
       })
-      notify(`${result.length} translation suggestions created`, 'success')
+      notify(`${result.length} ${t('ai.translated')}`, 'success')
       void refetch()
     } catch (e) {
-      notify(toastFromError(e, 'Translate failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
@@ -130,7 +133,7 @@ export function SuggestionPanel({
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-slate-200 bg-white p-4">
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-700">
-          Translate full CV
+          {t('ai.translateTitle')}
         </h3>
         <div className="flex gap-2">
           <select
@@ -138,7 +141,7 @@ export function SuggestionPanel({
             onChange={(e) => setSourceId(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
           >
-            <option value="">From language…</option>
+            <option value="">{t('ai.fromLanguage')}</option>
             {others.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.languageCode} — {l.name}
@@ -146,7 +149,7 @@ export function SuggestionPanel({
             ))}
           </select>
           <SecondaryButton onClick={() => void handleTranslate()} disabled={!sourceId || translate.isPending}>
-            {translate.isPending ? 'Translating…' : `Translate to ${currentLanguageCode}`}
+            {translate.isPending ? t('ai.translating') : `${t('ai.translateTo')} ${currentLanguageCode}`}
           </SecondaryButton>
         </div>
       </div>
@@ -154,15 +157,15 @@ export function SuggestionPanel({
       <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-800">
-            Pending suggestions ({suggestions?.length ?? 0})
+            {t('ai.pending')} ({suggestions?.length ?? 0})
           </h3>
           {(suggestions?.length ?? 0) > 0 && (
             <SecondaryButton onClick={() => void handleAcceptAll()} disabled={acceptAll.isPending}>
-              Accept all
+              {t('ai.acceptAll')}
             </SecondaryButton>
           )}
         </div>
-        {isLoading && <p className="text-sm text-slate-500">Loading…</p>}
+        {isLoading && <p className="text-sm text-slate-500">{t('common.loading')}</p>}
         {(suggestions ?? []).map((s) => (
           <div key={s.id} className="mb-2 rounded border border-violet-200 bg-white p-3 text-sm">
             <div className="mb-1 flex gap-2 text-xs text-slate-500">
@@ -175,16 +178,16 @@ export function SuggestionPanel({
             <p className="font-medium text-green-700">{s.payload.suggested || '(empty)'}</p>
             <div className="mt-2 flex gap-2">
               <SecondaryButton onClick={() => void handleAccept(s.id)} disabled={accept.isPending}>
-                Accept
+                {t('ai.accept')}
               </SecondaryButton>
               <SecondaryButton onClick={() => void handleReject(s.id)} disabled={reject.isPending}>
-                Reject
+                {t('ai.reject')}
               </SecondaryButton>
             </div>
           </div>
         ))}
         {(suggestions?.length ?? 0) === 0 && !isLoading && (
-          <p className="text-sm text-slate-500">No pending suggestions. Use Improve / Rewrite / Translate.</p>
+          <p className="text-sm text-slate-500">{t('ai.noPending')}</p>
         )}
       </div>
     </div>

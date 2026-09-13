@@ -4,9 +4,9 @@ SaaS for managing CVs/resumes.
 
 > Write your CV once. Generate every language and version automatically.
 
-Create Master CVs with structured data, derive independently editable language versions (TR/EN),
-improve wording with AI (translate / improve / rewrite via suggestion + accept/reject),
-pick one of three templates and export print-ready PDFs.
+Create Master CVs with structured data, derive independently editable language versions
+(TR/EN/DE/FR/ES), improve wording with AI (translate / improve / rewrite via suggestion +
+accept/reject), pick one of four templates and export print-ready PDFs.
 
 ## Architecture
 
@@ -36,6 +36,8 @@ Backend: Java 25, Spring Boot 4.1.x, Spring Web / Data JPA / Validation, Hiberna
 PostgreSQL 17, Flyway, JUnit 5, Mockito, Testcontainers, springdoc-openapi.
 Frontend: React 19, TypeScript, Vite, React Router, TanStack Query, Zustand,
 React Hook Form, Zod, Tailwind CSS 4, Vitest.
+The UI is bilingual (TR/EN toggle in the header); CV data supports TR/EN/DE/FR/ES
+language versions.
 AI: Google Gemini (`gemini-3.6-flash` by default) via Spring `RestClient`.
 PDF: server-rendered HTML/CSS → Chromium (Gotenberg service) → PDF bytes.
 
@@ -168,6 +170,8 @@ Prompts forbid inventing facts; only allowlisted section fields can be modified
 Templates `MODERN` / `MINIMAL` / `PROFESSIONAL` / `ATS` render in the backend
 (`pdf/template`) and a matching preview renders in the frontend.
 `ATS` is an ultra-plain single-column layout for applicant tracking systems.
+CVs support a photo URL plus user-defined custom sections (rendered after the
+built-in sections; not addressable by AI operations).
 DOCX export (`POST .../export/docx`) renders a plain single-column Word document
 via Apache POI — no external service needed.
 Conversion needs Chromium: `docker compose up -d gotenberg`

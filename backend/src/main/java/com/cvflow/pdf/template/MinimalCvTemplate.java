@@ -31,6 +31,7 @@ public class MinimalCvTemplate extends AbstractCvTemplate {
                 .cv-page { max-width: 720px; margin: 0 auto; padding: 40px 32px; }
                 .cv-header { text-align: center; margin-bottom: 28px; }
                 .cv-header h1 { font-size: 26px; font-weight: normal; letter-spacing: 2px; }
+                .cv-photo { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; }
                 .cv-title { font-style: italic; margin-top: 4px; }
                 .cv-contacts { font-size: 12px; margin-top: 6px; }
                 .cv-section { margin-bottom: 22px; }

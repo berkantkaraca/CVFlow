@@ -2,5 +2,8 @@ package com.cvflow.cv.model;
 
 public enum LanguageCode {
     TR,
-    EN
+    EN,
+    DE,
+    FR,
+    ES
 }

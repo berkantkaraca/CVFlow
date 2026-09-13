@@ -16,4 +16,5 @@ public class PersonalInfo {
     private String website;
     private String linkedin;
     private String github;
+    private String photoUrl;
 }

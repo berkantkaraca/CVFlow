@@ -19,6 +19,7 @@ public class CvContent {
     private List<Language> languages = new ArrayList<>();
     private List<Certification> certifications = new ArrayList<>();
     private List<Link> links = new ArrayList<>();
+    private List<CustomSection> customSections = new ArrayList<>();
 
     public static CvContent empty() {
         CvContent content = new CvContent();

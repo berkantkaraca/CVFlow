@@ -4,6 +4,7 @@ import com.cvflow.common.exception.DocxGenerationException;
 import com.cvflow.cv.model.Certification;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
+import com.cvflow.cv.model.CustomSection;
 import com.cvflow.cv.model.Education;
 import com.cvflow.cv.model.Experience;
 import com.cvflow.cv.model.Language;
@@ -52,6 +53,17 @@ public class DocxRenderer {
                 heading(document, SectionTitles.titleOf(section, language == null ? LanguageCode.EN : language), 1);
                 for (String line : lines) {
                     paragraph(document, line, line.startsWith("• "), 11);
+                }
+            }
+            for (CustomSection custom : nullSafe(safe.getCustomSections())) {
+                if (custom.getItems() == null || custom.getItems().isEmpty()) {
+                    continue;
+                }
+                heading(document, isBlank(custom.getTitle()) ? "—" : custom.getTitle(), 1);
+                for (String item : custom.getItems()) {
+                    if (!isBlank(item)) {
+                        paragraph(document, "• " + item, true, 11);
+                    }
                 }
             }
             document.write(out);

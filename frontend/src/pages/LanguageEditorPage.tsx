@@ -7,12 +7,14 @@ import { useLanguage, useLanguages, useUpdateLanguage } from '../features/langua
 import { exportDocx, exportPdf } from '../features/pdf/pdfApi'
 import { RevisionPanel } from '../features/revisions/RevisionPanel'
 import { useLanguageRevisions, useRestoreLanguageRevision } from '../features/revisions/revisionApi'
+import { useT } from '../i18n'
 import { toastFromError, useUiStore } from '../stores/uiStore'
 import type { TemplateCode } from '../types/cv'
 
 export function LanguageEditorPage() {
   const { cvId = '', languageId = '' } = useParams()
   const notify = useUiStore((s) => s.notify)
+  const t = useT()
   const { data: language, isLoading, isError, refetch } = useLanguage(cvId, languageId)
   const { data: languages, refetch: refetchLanguages } = useLanguages(cvId)
   const { data: revisions, isLoading: revisionsLoading } = useLanguageRevisions(cvId, languageId)
@@ -26,9 +28,9 @@ export function LanguageEditorPage() {
     setExporting(true)
     try {
       await exportPdf(cvId, language.languageCode)
-      notify('PDF downloaded', 'success')
+      notify(t('editor.pdfDownloaded'), 'success')
     } catch (e) {
-      notify(toastFromError(e, 'PDF export failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     } finally {
       setExporting(false)
     }
@@ -39,9 +41,9 @@ export function LanguageEditorPage() {
     setExportingDocx(true)
     try {
       await exportDocx(cvId, language.languageCode)
-      notify('DOCX downloaded', 'success')
+      notify(t('editor.docxDownloaded'), 'success')
     } catch (e) {
-      notify(toastFromError(e, 'DOCX export failed'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     } finally {
       setExportingDocx(false)
     }
@@ -57,21 +59,21 @@ export function LanguageEditorPage() {
         sectionOrder: language.sectionOrder,
         version: language.version,
       })
-      notify(`Template set to ${templateCode}`, 'success')
+      notify(`${t('editor.templateSet')} ${templateCode}`, 'success')
       void refetch()
       void refetchLanguages()
     } catch (e) {
-      notify(toastFromError(e, 'Template change failed — save your edits first'), 'error')
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
   }
 
-  if (isLoading) return <p>Loading…</p>
+  if (isLoading) return <p>{t('common.loading')}</p>
   if (isError || !language)
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
-        <p className="font-medium text-red-700">Could not load this language version.</p>
+        <p className="font-medium text-red-700">{t('error.loadLang')}</p>
         <button onClick={() => void refetch()} className="mt-2 rounded bg-red-600 px-3 py-1 text-white">
-          Retry
+          {t('common.retry')}
         </button>
       </div>
     )
@@ -80,11 +82,11 @@ export function LanguageEditorPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link to="/cvs" className="hover:underline">
-          CVs
+          {t('nav.cvs')}
         </Link>
         <span>/</span>
         <Link to={`/cvs/${cvId}`} className="hover:underline">
-          Master CV
+          {t('editor.masterCv')}
         </Link>
         <span>/</span>
         <span className="font-medium text-slate-800">
@@ -111,7 +113,7 @@ export function LanguageEditorPage() {
               value={language.templateCode}
               onChange={(e) => void onTemplateChange(e.target.value as TemplateCode)}
               className="rounded-md border border-slate-300 px-2 py-2 text-sm"
-              title="Template"
+              title={t('editor.template')}
             >
               <option value="MODERN">MODERN</option>
               <option value="MINIMAL">MINIMAL</option>
@@ -119,10 +121,10 @@ export function LanguageEditorPage() {
               <option value="ATS">ATS (plain)</option>
             </select>
             <SecondaryButton onClick={() => void onExport()} disabled={exporting}>
-              {exporting ? 'Exporting…' : '⬇ Export PDF'}
+              {exporting ? t('editor.exporting') : t('editor.exportPdf')}
             </SecondaryButton>
             <SecondaryButton onClick={() => void onExportDocx()} disabled={exportingDocx}>
-              {exportingDocx ? 'Exporting…' : '⬇ Export DOCX'}
+              {exportingDocx ? t('editor.exporting') : t('editor.exportDocx')}
             </SecondaryButton>
           </>
         }
