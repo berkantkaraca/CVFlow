@@ -76,7 +76,7 @@ public class AiService {
         com.cvflow.cv.model.CvContent translated = aiClient.translateContent(
                 source.getContent(), source.getLanguageCode(), target.getLanguageCode());
         usageService.recordAiUsage(userId, AiOperation.TRANSLATE);
-        List<AiSuggestionResponse> suggestions = differ.diff(translated, target.getContent()).stream()
+        List<CvAiSuggestion> suggestions = differ.diff(translated, target.getContent()).stream()
                 .map(diff -> {
                     CvAiSuggestion suggestion = new CvAiSuggestion();
                     suggestion.setLanguageVersionId(target.getId());
@@ -84,10 +84,12 @@ public class AiService {
                     suggestion.setStatus(AiSuggestionStatus.PENDING);
                     suggestion.setPayload(new AiSuggestionPayload(
                             diff.section(), diff.entityId(), diff.field(), diff.original(), diff.suggested()));
-                    return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+                    return suggestion;
                 })
                 .toList();
-        return suggestions;
+        return suggestionRepository.saveAll(suggestions).stream()
+                .map(AiSuggestionMapper::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -98,7 +100,7 @@ public class AiService {
         com.cvflow.cv.model.CvContent tailored =
                 aiClient.tailorContent(version.getContent(), request.jobDescription(), version.getLanguageCode());
         usageService.recordAiUsage(userId, AiOperation.TAILOR);
-        return differ.diff(tailored, version.getContent()).stream()
+        List<CvAiSuggestion> suggestions = differ.diff(tailored, version.getContent()).stream()
                 .map(diff -> {
                     CvAiSuggestion suggestion = new CvAiSuggestion();
                     suggestion.setLanguageVersionId(version.getId());
@@ -106,8 +108,11 @@ public class AiService {
                     suggestion.setStatus(AiSuggestionStatus.PENDING);
                     suggestion.setPayload(new AiSuggestionPayload(
                             diff.section(), diff.entityId(), diff.field(), diff.original(), diff.suggested()));
-                    return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+                    return suggestion;
                 })
+                .toList();
+        return suggestionRepository.saveAll(suggestions).stream()
+                .map(AiSuggestionMapper::toResponse)
                 .toList();
     }
 

@@ -68,7 +68,7 @@ class BackupServiceTest {
     void exportAssemblesDocument() {
         MasterCv cv = masterCv();
         when(masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId)).thenReturn(List.of(cv));
-        when(languageVersionRepository.findAllByMasterCvId(cv.getId())).thenReturn(List.of());
+        when(languageVersionRepository.findAllByMasterCvIdIn(any())).thenReturn(List.of());
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         BackupDocument document = service.exportBackup();
@@ -83,9 +83,9 @@ class BackupServiceTest {
         BackupDocument document = new BackupDocument(
                 1, java.time.Instant.now(), "user@example.com", List.of(backupCv()));
 
-        when(masterCvRepository.save(any())).thenAnswer(i -> {
-            MasterCv saved = i.getArgument(0);
-            saved.setId(UUID.randomUUID());
+        when(masterCvRepository.saveAll(any())).thenAnswer(i -> {
+            List<MasterCv> saved = i.getArgument(0);
+            saved.forEach(cv -> cv.setId(UUID.randomUUID()));
             return saved;
         });
 
@@ -93,9 +93,10 @@ class BackupServiceTest {
 
         assertEquals(1, result.importedCvs());
         assertEquals(1, result.importedLanguages());
-        ArgumentCaptor<MasterCv> captor = ArgumentCaptor.forClass(MasterCv.class);
-        verify(masterCvRepository).save(captor.capture());
-        assertEquals(userId, captor.getValue().getUserId());
+        ArgumentCaptor<List<MasterCv>> captor = ArgumentCaptor.forClass(List.class);
+        verify(masterCvRepository).saveAll(captor.capture());
+        assertEquals(1, captor.getValue().size());
+        assertEquals(userId, captor.getValue().get(0).getUserId());
     }
 
     @Test

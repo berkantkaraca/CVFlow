@@ -57,8 +57,7 @@ class UsageServiceTest {
 
     @Test
     void rejectsCvCreationAtQuota() {
-        when(masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId))
-                .thenReturn(List.of(new com.cvflow.cv.entity.MasterCv()));
+        when(masterCvRepository.countByUserId(userId)).thenReturn(1L);
 
         assertThrows(LimitExceededException.class, () -> service.checkCvQuota(userId));
     }
@@ -66,7 +65,7 @@ class UsageServiceTest {
     @Test
     void usageSummarizesPeriod() {
         when(aiUsageRepository.countByUserIdAndCreatedAtAfter(any(), any())).thenReturn(1L);
-        when(masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId)).thenReturn(List.of());
+        when(masterCvRepository.countByUserId(userId)).thenReturn(0L);
 
         var usage = service.usage();
 

@@ -168,7 +168,7 @@ class AiServiceTest {
         CvContent tailored = CvContent.empty();
         tailored.setSummary("Tailored summary");
         when(aiClient.tailorContent(any(), any(), any())).thenReturn(tailored);
-        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(suggestionRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
 
         var suggestions = service.tailor(new com.cvflow.ai.dto.TailorRequest(versionId, "Hiring Java devs"));
 
@@ -212,7 +212,7 @@ class AiServiceTest {
         CvContent translated = CvContent.empty();
         translated.setSummary("Kıdemli geliştirici");
         when(aiClient.translateContent(any(), any(), any())).thenReturn(translated);
-        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(suggestionRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
 
         var suggestions = service.translate(new TranslateRequest(sourceId, versionId));
 

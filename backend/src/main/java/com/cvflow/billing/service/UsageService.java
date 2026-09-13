@@ -41,8 +41,7 @@ public class UsageService {
     }
 
     public void checkCvQuota(UUID userId) {
-        long count = masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId).size();
-        if (count >= billingProperties.freeCvsMax()) {
+        if (masterCvRepository.countByUserId(userId) >= billingProperties.freeCvsMax()) {
             throw new LimitExceededException("CV limit exceeded for the free plan");
         }
     }
@@ -54,7 +53,7 @@ public class UsageService {
                 PLAN,
                 aiUsageRepository.countByUserIdAndCreatedAtAfter(userId, monthStart()),
                 billingProperties.freeAiCallsMonthly(),
-                masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId).size(),
+                masterCvRepository.countByUserId(userId),
                 billingProperties.freeCvsMax(),
                 monthStart().toString());
     }

@@ -19,8 +19,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,12 +51,16 @@ public class BackupService {
                 .findById(userId)
                 .map(user -> user.getEmail())
                 .orElse("unknown");
-        List<BackupMasterCv> cvs = masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId).stream()
+        List<MasterCv> cvs = masterCvRepository.findAllByUserIdOrderByUpdatedAtDesc(userId);
+        Map<UUID, List<CvLanguageVersion>> versionsByMaster = languageVersionRepository
+                .findAllByMasterCvIdIn(cvs.stream().map(MasterCv::getId).toList()).stream()
+                .collect(Collectors.groupingBy(CvLanguageVersion::getMasterCvId));
+        List<BackupMasterCv> documents = cvs.stream()
                 .map(cv -> new BackupMasterCv(
                         cv.getName(),
                         cloner.clone(cv.getContent()),
                         copyOrder(cv.getSectionOrder()),
-                        languageVersionRepository.findAllByMasterCvId(cv.getId()).stream()
+                        versionsByMaster.getOrDefault(cv.getId(), List.of()).stream()
                                 .map(version -> new BackupLanguageVersion(
                                         version.getLanguageCode(),
                                         version.getName(),
@@ -63,7 +69,7 @@ public class BackupService {
                                         copyOrder(version.getSectionOrder())))
                                 .toList()))
                 .toList();
-        return new BackupDocument(FORMAT_VERSION, Instant.now(), email, cvs);
+        return new BackupDocument(FORMAT_VERSION, Instant.now(), email, documents);
     }
 
     @Transactional
@@ -72,30 +78,34 @@ public class BackupService {
             throw new InvalidBackupException("Unsupported backup format");
         }
         UUID userId = currentUserService.getCurrentUserId();
-        int cvs = 0;
-        int languages = 0;
-        for (BackupMasterCv backupCv : nullSafe(document.masterCvs())) {
-            validateMaster(backupCv);
-            MasterCv cv = new MasterCv();
-            cv.setUserId(userId);
-            cv.setName(backupCv.name());
-            cv.setContent(cloner.clone(backupCv.content()));
-            cv.setSectionOrder(copyOrder(backupCv.sectionOrder()));
-            MasterCv saved = masterCvRepository.save(cv);
-            cvs++;
-            for (BackupLanguageVersion backupLanguage : nullSafe(backupCv.languages())) {
+        List<BackupMasterCv> entries = nullSafe(document.masterCvs());
+        entries.forEach(this::validateMaster);
+        List<MasterCv> savedCvs = masterCvRepository.saveAll(entries.stream()
+                .map(backupCv -> {
+                    MasterCv cv = new MasterCv();
+                    cv.setUserId(userId);
+                    cv.setName(backupCv.name());
+                    cv.setContent(cloner.clone(backupCv.content()));
+                    cv.setSectionOrder(copyOrder(backupCv.sectionOrder()));
+                    return cv;
+                })
+                .toList());
+        List<CvLanguageVersion> versions = new ArrayList<>();
+        for (int i = 0; i < entries.size(); i++) {
+            UUID masterId = savedCvs.get(i).getId();
+            for (BackupLanguageVersion backupLanguage : nullSafe(entries.get(i).languages())) {
                 CvLanguageVersion version = new CvLanguageVersion();
-                version.setMasterCvId(saved.getId());
+                version.setMasterCvId(masterId);
                 version.setLanguageCode(backupLanguage.languageCode());
                 version.setName(backupLanguage.name());
                 version.setTemplateCode(backupLanguage.templateCode());
                 version.setContent(cloner.clone(backupLanguage.content()));
                 version.setSectionOrder(copyOrder(backupLanguage.sectionOrder()));
-                languageVersionRepository.save(version);
-                languages++;
+                versions.add(version);
             }
         }
-        return new BackupImportResult(cvs, languages);
+        languageVersionRepository.saveAll(versions);
+        return new BackupImportResult(savedCvs.size(), versions.size());
     }
 
     private void validateMaster(BackupMasterCv backupCv) {

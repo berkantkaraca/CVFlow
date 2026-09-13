@@ -125,16 +125,21 @@ public class CvService {
         copy.setContent(cloner.clone(source.getContent()));
         copy.setSectionOrder(new ArrayList<>(source.getSectionOrder()));
         MasterCv saved = masterCvRepository.saveAndFlush(copy);
-        for (CvLanguageVersion languageVersion : languageVersionRepository.findAllByMasterCvId(source.getId())) {
-            CvLanguageVersion languageCopy = new CvLanguageVersion();
-            languageCopy.setMasterCvId(saved.getId());
-            languageCopy.setLanguageCode(languageVersion.getLanguageCode());
-            languageCopy.setName(languageVersion.getName());
-            languageCopy.setTemplateCode(languageVersion.getTemplateCode());
-            languageCopy.setContent(cloner.clone(languageVersion.getContent()));
-            languageCopy.setSectionOrder(new ArrayList<>(languageVersion.getSectionOrder()));
-            languageVersionRepository.save(languageCopy);
-        }
+        List<CvLanguageVersion> languageCopies =
+                languageVersionRepository.findAllByMasterCvId(source.getId()).stream()
+                        .map(languageVersion -> {
+                            CvLanguageVersion languageCopy = new CvLanguageVersion();
+                            languageCopy.setMasterCvId(saved.getId());
+                            languageCopy.setLanguageCode(languageVersion.getLanguageCode());
+                            languageCopy.setName(languageVersion.getName());
+                            languageCopy.setTemplateCode(languageVersion.getTemplateCode());
+                            languageCopy.setContent(cloner.clone(languageVersion.getContent()));
+                            languageCopy.setSectionOrder(
+                                    new ArrayList<>(languageVersion.getSectionOrder()));
+                            return languageCopy;
+                        })
+                        .toList();
+        languageVersionRepository.saveAll(languageCopies);
         return CvMapper.toResponse(saved);
     }
 

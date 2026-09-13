@@ -145,7 +145,7 @@ class CvServiceTest {
 
         cvService.duplicate(cvId);
 
-        verify(languageVersionRepository).save(any(CvLanguageVersion.class));
+        verify(languageVersionRepository).saveAll(any());
     }
 
     @Test

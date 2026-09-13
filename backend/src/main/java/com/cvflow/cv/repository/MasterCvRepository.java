@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MasterCvRepository extends JpaRepository<MasterCv, UUID> {
     List<MasterCv> findAllByUserIdOrderByUpdatedAtDesc(UUID userId);
+
+    long countByUserId(UUID userId);
 }
