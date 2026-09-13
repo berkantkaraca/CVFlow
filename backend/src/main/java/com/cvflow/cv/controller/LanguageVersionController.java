@@ -8,6 +8,8 @@ import com.cvflow.cv.dto.request.UpdateLanguageVersionRequest;
 import com.cvflow.cv.dto.response.LanguageVersionResponse;
 import com.cvflow.cv.dto.response.LanguageVersionSummaryResponse;
 import com.cvflow.cv.dto.response.RevisionResponse;
+import com.cvflow.cv.dto.response.AtsScoreResponse;
+import com.cvflow.cv.service.AtsService;
 import com.cvflow.cv.service.LanguageVersionService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class LanguageVersionController {
     private final LanguageVersionService languageVersionService;
+    private final AtsService atsService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<LanguageVersionSummaryResponse>>> list(@PathVariable UUID cvId) {
@@ -79,5 +82,11 @@ public class LanguageVersionController {
             @Valid @RequestBody RestoreRevisionRequest request) {
         return ResponseEntity.ok(ApiResponses.success(
                 languageVersionService.restoreRevision(cvId, languageVersionId, revisionId, request)));
+    }
+
+    @GetMapping("/{languageVersionId}/ats-score")
+    public ResponseEntity<ApiResponse<AtsScoreResponse>> atsScore(
+            @PathVariable UUID cvId, @PathVariable UUID languageVersionId) {
+        return ResponseEntity.ok(ApiResponses.success(atsService.score(cvId, languageVersionId)));
     }
 }

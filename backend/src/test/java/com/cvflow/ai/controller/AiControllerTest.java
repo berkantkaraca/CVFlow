@@ -130,6 +130,31 @@ class AiControllerTest {
                 .andExpect(jsonPath("$.error.code").value("INVALID_REQUEST"));
     }
 
+    @Test
+    void tailorReturns201() throws Exception {
+        when(aiService.tailor(any())).thenReturn(List.of(sample()));
+
+        mvc.perform(post("/api/v1/ai/tailor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                "{\"languageVersionId\":\"" + versionId
+                                        + "\",\"jobDescription\":\"Hiring Java devs\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void coverLetterReturns201() throws Exception {
+        when(aiService.generateCoverLetter(any()))
+                .thenReturn(new com.cvflow.ai.dto.CoverLetterDraftResponse("Dear team,"));
+
+        mvc.perform(post("/api/v1/ai/cover-letter")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"masterCvId\":\"" + versionId + "\",\"languageCode\":\"EN\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.body").value("Dear team,"));
+    }
+
     private AiSuggestionResponse sample() {
         return new AiSuggestionResponse(
                 suggestionId,

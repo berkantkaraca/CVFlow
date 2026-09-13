@@ -140,10 +140,28 @@ DELETE /api/v1/cvs/{cvId}/languages/{languageVersionId}    delete
 POST   /api/v1/ai/improve                   suggestion (PENDING)
 POST   /api/v1/ai/rewrite                   suggestion (PENDING)
 POST   /api/v1/ai/translate                 bulk translation → individual suggestions
+POST   /api/v1/ai/tailor                    tailor CV to a job description → suggestions
+POST   /api/v1/ai/cover-letter              AI cover-letter draft (not persisted)
 GET    /api/v1/ai/suggestions?languageVersionId=&status=
 POST   /api/v1/ai/suggestions/{id}/accept   apply + ACCEPTED (one transaction)
 POST   /api/v1/ai/suggestions/{id}/reject   REJECTED (no content change)
 POST   /api/v1/ai/suggestions/accept-all    apply all PENDING (one transaction)
+
+GET    /api/v1/cvs/{cvId}/languages/{languageVersionId}/ats-score   ATS score + checklist
+
+GET    /api/v1/cvs/{cvId}/cover-letters                 list cover letters
+POST   /api/v1/cvs/{cvId}/cover-letters                 create
+GET    /api/v1/cvs/{cvId}/cover-letters/{letterId}      get
+PUT    /api/v1/cvs/{cvId}/cover-letters/{letterId}      update (version → 409)
+DELETE /api/v1/cvs/{cvId}/cover-letters/{letterId}      delete
+POST   /api/v1/cvs/{cvId}/cover-letters/{letterId}/export/pdf   letter PDF
+
+GET    /api/v1/cvs/{cvId}/languages/{languageVersionId}/share       list share links
+POST   /api/v1/cvs/{cvId}/languages/{languageVersionId}/share       create (optional expiry)
+DELETE /api/v1/cvs/{cvId}/languages/{languageVersionId}/share/{shareId}  revoke
+GET    /api/v1/public/cv/{token}                    public CV page (no auth)
+
+GET    /api/v1/billing/usage                        FREE plan usage vs limits
 
 POST   /api/v1/cvs/{cvId}/export/pdf        { languageCode } → application/pdf
 POST   /api/v1/cvs/{cvId}/export/docx       { languageCode } → Word document (.docx)

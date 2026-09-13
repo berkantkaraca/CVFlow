@@ -3,7 +3,10 @@ package com.cvflow.ai.service;
 import com.cvflow.ai.client.AiClient;
 import com.cvflow.ai.dto.AcceptAllRequest;
 import com.cvflow.ai.dto.AiSuggestionResponse;
+import com.cvflow.ai.dto.CoverLetterDraftResponse;
+import com.cvflow.ai.dto.CoverLetterRequest;
 import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.dto.TailorRequest;
 import com.cvflow.ai.dto.TranslateRequest;
 import com.cvflow.ai.entity.CvAiSuggestion;
 import com.cvflow.ai.mapper.AiSuggestionMapper;
@@ -16,8 +19,10 @@ import com.cvflow.common.exception.InvalidSuggestionStateException;
 import com.cvflow.common.exception.SuggestionNotFoundException;
 import com.cvflow.common.security.CvAccessService;
 import com.cvflow.cv.entity.CvLanguageVersion;
+import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.service.RevisionService;
+import com.cvflow.billing.service.UsageService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +40,16 @@ public class AiService {
     private final SuggestionApplier applier;
     private final CvContentDiffer differ;
     private final RevisionService revisionService;
+    private final UsageService usageService;
 
     @Transactional
     public AiSuggestionResponse improve(ImproveRequest request) {
         CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
         fieldValidator.validate(request.section(), request.entityId(), request.field());
+        UUID userId = ownerOf(version);
+        usageService.checkAiQuota(userId);
         String suggested = aiClient.improve(request.content());
+        usageService.recordAiUsage(userId, AiOperation.IMPROVE);
         return saveSuggestion(version.getId(), AiOperation.IMPROVE, request, suggested);
     }
 
@@ -48,7 +57,10 @@ public class AiService {
     public AiSuggestionResponse rewrite(ImproveRequest request) {
         CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
         fieldValidator.validate(request.section(), request.entityId(), request.field());
+        UUID userId = ownerOf(version);
+        usageService.checkAiQuota(userId);
         String suggested = aiClient.rewrite(request.content());
+        usageService.recordAiUsage(userId, AiOperation.REWRITE);
         return saveSuggestion(version.getId(), AiOperation.REWRITE, request, suggested);
     }
 
@@ -59,8 +71,11 @@ public class AiService {
         if (source.getLanguageCode() == target.getLanguageCode()) {
             throw new InvalidFieldException("Source and target language versions must have different languages");
         }
+        UUID userId = ownerOf(target);
+        usageService.checkAiQuota(userId);
         com.cvflow.cv.model.CvContent translated = aiClient.translateContent(
                 source.getContent(), source.getLanguageCode(), target.getLanguageCode());
+        usageService.recordAiUsage(userId, AiOperation.TRANSLATE);
         List<AiSuggestionResponse> suggestions = differ.diff(translated, target.getContent()).stream()
                 .map(diff -> {
                     CvAiSuggestion suggestion = new CvAiSuggestion();
@@ -73,6 +88,43 @@ public class AiService {
                 })
                 .toList();
         return suggestions;
+    }
+
+    @Transactional
+    public List<AiSuggestionResponse> tailor(TailorRequest request) {
+        CvLanguageVersion version = cvAccessService.getOwnedLanguageVersion(request.languageVersionId());
+        UUID userId = ownerOf(version);
+        usageService.checkAiQuota(userId);
+        com.cvflow.cv.model.CvContent tailored =
+                aiClient.tailorContent(version.getContent(), request.jobDescription(), version.getLanguageCode());
+        usageService.recordAiUsage(userId, AiOperation.TAILOR);
+        return differ.diff(tailored, version.getContent()).stream()
+                .map(diff -> {
+                    CvAiSuggestion suggestion = new CvAiSuggestion();
+                    suggestion.setLanguageVersionId(version.getId());
+                    suggestion.setOperation(AiOperation.TAILOR);
+                    suggestion.setStatus(AiSuggestionStatus.PENDING);
+                    suggestion.setPayload(new AiSuggestionPayload(
+                            diff.section(), diff.entityId(), diff.field(), diff.original(), diff.suggested()));
+                    return AiSuggestionMapper.toResponse(suggestionRepository.save(suggestion));
+                })
+                .toList();
+    }
+
+    @Transactional
+    public CoverLetterDraftResponse generateCoverLetter(CoverLetterRequest request) {
+        MasterCv master = cvAccessService.getOwnedCv(request.masterCvId());
+        UUID userId = master.getUserId();
+        usageService.checkAiQuota(userId);
+        String body = aiClient.generateCoverLetter(
+                master.getContent(), request.jobDescription(), request.languageCode());
+        usageService.recordAiUsage(userId, AiOperation.COVER_LETTER);
+        return new CoverLetterDraftResponse(body);
+    }
+
+    private UUID ownerOf(CvLanguageVersion version) {
+        MasterCv master = cvAccessService.getOwnedCv(version.getMasterCvId());
+        return master.getUserId();
     }
 
     @Transactional

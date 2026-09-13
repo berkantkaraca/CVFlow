@@ -7,6 +7,7 @@ import { DangerButton, Field, PrimaryButton, SecondaryButton, TextInput } from '
 import { CvDocumentEditor } from '../features/editor/CvDocumentEditor'
 import { useCv, useUpdateCv } from '../features/cvs/cvApi'
 import { useCreateLanguage, useDeleteLanguage, useLanguages } from '../features/languages/languageApi'
+import { useCoverLetters, useCreateCoverLetter, useDeleteCoverLetter } from '../features/letters/letterApi'
 import { RevisionPanel } from '../features/revisions/RevisionPanel'
 import { useMasterRevisions, useRestoreMasterRevision } from '../features/revisions/revisionApi'
 import { useT } from '../i18n'
@@ -36,6 +37,9 @@ export function CvEditorPage() {
   const { data: cv, isLoading, isError, refetch } = useCv(cvId)
   const updateCv = useUpdateCv(cvId)
   const { data: languages } = useLanguages(cvId)
+  const { data: letters } = useCoverLetters(cvId)
+  const createLetter = useCreateCoverLetter(cvId)
+  const deleteLetter = useDeleteCoverLetter(cvId)
   const { data: revisions, isLoading: revisionsLoading } = useMasterRevisions(cvId)
   const restoreRevision = useRestoreMasterRevision(cvId)
   const createLanguage = useCreateLanguage(cvId)
@@ -68,6 +72,25 @@ export function CvEditorPage() {
     try {
       await deleteLanguage.mutateAsync(id)
       notify(t('editor.langDeleted'), 'info')
+    } catch (e) {
+      notify(toastFromError(e, t('error.generic')), 'error')
+    }
+  }
+
+  async function onAddLetter() {
+    try {
+      const created = await createLetter.mutateAsync({ languageCode: 'EN', title: 'Cover letter' })
+      navigate(`/cvs/${cvId}/cover-letters/${created.id}`)
+    } catch (e) {
+      notify(toastFromError(e, t('error.generic')), 'error')
+    }
+  }
+
+  async function onDeleteLetter(id: string, title: string) {
+    if (!window.confirm(`${t('letter.confirmDelete')} "${title}"?`)) return
+    try {
+      await deleteLetter.mutateAsync(id)
+      notify(t('letter.deleted'), 'info')
     } catch (e) {
       notify(toastFromError(e, t('error.generic')), 'error')
     }
@@ -154,6 +177,30 @@ export function CvEditorPage() {
         </ul>
         {(languages?.length ?? 0) === 0 && (
           <p className="text-sm text-slate-500">{t('editor.noLanguages')}</p>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-semibold">{t('letter.title')}</h2>
+          <PrimaryButton onClick={() => void onAddLetter()} disabled={createLetter.isPending}>
+            {t('letter.add')}
+          </PrimaryButton>
+        </div>
+        <ul className="flex flex-col gap-1">
+          {(letters ?? []).map((l) => (
+            <li key={l.id} className="flex items-center gap-3 rounded border border-slate-100 px-3 py-2 text-sm">
+              <Link to={`/cvs/${cvId}/cover-letters/${l.id}`} className="font-medium text-blue-700 hover:underline">
+                {l.title}
+              </Link>
+              <DangerButton onClick={() => void onDeleteLetter(l.id, l.title)} className="ml-auto">
+                {t('common.delete')}
+              </DangerButton>
+            </li>
+          ))}
+        </ul>
+        {(letters?.length ?? 0) === 0 && (
+          <p className="text-sm text-slate-500">{t('letter.empty')}</p>
         )}
       </div>
 

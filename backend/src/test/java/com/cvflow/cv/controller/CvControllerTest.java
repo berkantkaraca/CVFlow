@@ -110,6 +110,19 @@ class CvControllerTest {
                 .andExpect(jsonPath("$.success").value(true));
     }
 
+    @Test
+    void updateAcceptsExperienceWithoutCurrentFlag() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(cvService.update(eq(id), any())).thenReturn(sampleResponse());
+
+        mvc.perform(put("/api/v1/cvs/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                "{\"name\":\"CV\",\"content\":{\"experiences\":[{\"company\":\"Acme\"}]},\"sectionOrder\":[\"SUMMARY\"],\"version\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
     private CvResponse sampleResponse() {
         return new CvResponse(
                 UUID.randomUUID(),

@@ -112,8 +112,7 @@ class GeminiClientTest {
     }
 
     @Test
-    void translateContentParsesTranslatedDocument() {
-        body = geminiBody(
+    void translateContentParsesTranslatedDocument() {        body = geminiBody(
                 "{\"personal\":{},\"summary\":\"Yazılım geliştirici\",\"experiences\":[],\"education\":[],"
                         + "\"projects\":[],\"skills\":[],\"languages\":[],\"certifications\":[],\"links\":[]}");
 
@@ -131,6 +130,25 @@ class GeminiClientTest {
                 AiServiceException.class,
                 () -> client.translateContent(com.cvflow.cv.model.CvContent.empty(), LanguageCode.EN, LanguageCode.TR));
         assertEquals("AI_INVALID_RESPONSE", ex.getCode());
+    }
+
+    @Test
+    void tailorContentParsesDocument() {
+        body = geminiBody(
+                "{\"personal\":{},\"summary\":\"Tailored summary\",\"experiences\":[],\"education\":[],"
+                        + "\"projects\":[],\"skills\":[],\"languages\":[],\"certifications\":[],\"links\":[]}");
+
+        com.cvflow.cv.model.CvContent tailored = client.tailorContent(
+                com.cvflow.cv.model.CvContent.empty(), "Hiring Java devs", LanguageCode.EN);
+
+        assertEquals("Tailored summary", tailored.getSummary());
+    }
+
+    @Test
+    void generateCoverLetterReturnsBody() {
+        assertEquals(
+                "Improved text",
+                client.generateCoverLetter(com.cvflow.cv.model.CvContent.empty(), "JD", LanguageCode.EN));
     }
 
     private static String geminiBody(String innerText) {

@@ -37,16 +37,38 @@ public class GeminiClient implements AiClient {
     @Override
     public CvContent translateContent(
             CvContent content, LanguageCode sourceLanguage, LanguageCode targetLanguage) {
-        String contentJson;
+        String contentJson = serializeContent(content);
+        String translated = generateText(GeminiApi.Request.ofDocument(
+                promptBuilder.translateContent(contentJson, sourceLanguage, targetLanguage)));
+        return parseDocument(translated);
+    }
+
+    @Override
+    public CvContent tailorContent(CvContent content, String jobDescription, LanguageCode language) {
+        String contentJson = serializeContent(content);
+        String tailored = generateText(GeminiApi.Request.ofDocument(
+                promptBuilder.tailorContent(contentJson, jobDescription, language)));
+        return parseDocument(tailored);
+    }
+
+    @Override
+    public String generateCoverLetter(CvContent content, String jobDescription, LanguageCode language) {
+        String contentJson = serializeContent(content);
+        return generate(
+                promptBuilder.coverLetter(contentJson, jobDescription, language), contentJson);
+    }
+
+    private String serializeContent(CvContent content) {
         try {
-            contentJson = objectMapper.writeValueAsString(content == null ? CvContent.empty() : content);
+            return objectMapper.writeValueAsString(content == null ? CvContent.empty() : content);
         } catch (Exception ex) {
             throw new AiServiceException("AI_INVALID_RESPONSE", "CV content could not be serialized");
         }
-        String translated = generateText(GeminiApi.Request.ofDocument(
-                promptBuilder.translateContent(contentJson, sourceLanguage, targetLanguage)));
+    }
+
+    private CvContent parseDocument(String text) {
         try {
-            CvContent parsed = objectMapper.readValue(translated, CvContent.class);
+            CvContent parsed = objectMapper.readValue(text, CvContent.class);
             if (parsed == null) {
                 throw new AiServiceException("AI_EMPTY_RESPONSE", "AI provider returned no usable content");
             }

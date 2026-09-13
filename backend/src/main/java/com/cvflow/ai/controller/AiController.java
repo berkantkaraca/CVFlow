@@ -2,7 +2,10 @@ package com.cvflow.ai.controller;
 
 import com.cvflow.ai.dto.AcceptAllRequest;
 import com.cvflow.ai.dto.AiSuggestionResponse;
+import com.cvflow.ai.dto.CoverLetterDraftResponse;
+import com.cvflow.ai.dto.CoverLetterRequest;
 import com.cvflow.ai.dto.ImproveRequest;
+import com.cvflow.ai.dto.TailorRequest;
 import com.cvflow.ai.dto.TranslateRequest;
 import com.cvflow.ai.model.AiSuggestionStatus;
 import com.cvflow.ai.service.AiService;
@@ -42,6 +45,19 @@ public class AiController {
     public ResponseEntity<ApiResponse<List<AiSuggestionResponse>>> translate(
             @Valid @RequestBody TranslateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponses.success(aiService.translate(request)));
+    }
+
+    @PostMapping("/tailor")
+    public ResponseEntity<ApiResponse<List<AiSuggestionResponse>>> tailor(
+            @Valid @RequestBody TailorRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponses.success(aiService.tailor(request)));
+    }
+
+    @PostMapping("/cover-letter")
+    public ResponseEntity<ApiResponse<CoverLetterDraftResponse>> coverLetter(
+            @Valid @RequestBody CoverLetterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponses.success(aiService.generateCoverLetter(request)));
     }
 
     @PostMapping("/suggestions/accept-all")

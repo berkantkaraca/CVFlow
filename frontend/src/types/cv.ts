@@ -156,7 +156,52 @@ export interface Revision {
   createdAt: string
 }
 
-export type AiOperation = 'TRANSLATE' | 'IMPROVE' | 'REWRITE'
+export interface CoverLetterSummary {
+  id: string
+  title: string
+  updatedAt: string
+  version: number
+}
+
+export interface CoverLetter extends CoverLetterSummary {
+  masterCvId: string
+  languageCode: LanguageCode
+  recipient?: string | null
+  company?: string | null
+  position?: string | null
+  body: string
+  createdAt: string
+}
+
+export interface ShareLink {
+  id: string
+  token: string
+  expiresAt: string | null
+  createdAt: string
+}
+
+export interface AtsCheck {
+  code: string
+  label: string
+  passed: boolean
+  detail: string
+}
+
+export interface AtsScore {
+  score: number
+  checks: AtsCheck[]
+}
+
+export interface Usage {
+  plan: string
+  aiCallsUsed: number
+  aiCallsLimit: number
+  cvsUsed: number
+  cvsMax: number
+  periodStart: string
+}
+
+export type AiOperation = 'TRANSLATE' | 'IMPROVE' | 'REWRITE' | 'TAILOR' | 'COVER_LETTER'
 export type AiSuggestionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
 
 export interface AiSuggestionPayload {

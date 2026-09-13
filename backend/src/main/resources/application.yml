@@ -1,6 +1,9 @@
 spring:
   application:
     name: cvflow-backend
+  jackson:
+    deserialization:
+      FAIL_ON_NULL_FOR_PRIMITIVES: false
   datasource:
     url: jdbc:postgresql://localhost:5432/cv_saas
     username: postgres
@@ -31,6 +34,9 @@ app:
     jwt:
       secret: ${JWT_SECRET:cvflow-dev-secret-change-me-min-32-chars!!}
       expiration-hours: 24
+  billing:
+    free-ai-calls-monthly: 50
+    free-cvs-max: 10
   ai:
     gemini:
       api-key: ${GEMINI_API_KEY:}

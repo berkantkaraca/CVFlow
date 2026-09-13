@@ -12,6 +12,7 @@ import {
   useSuggestions,
   useTranslate,
 } from './aiApi'
+import { useTailor } from './tailorApi'
 
 export function AiFieldButtons({
   languageVersionId,
@@ -82,7 +83,10 @@ export function SuggestionPanel({
   const reject = useRejectSuggestion(languageVersionId)
   const acceptAll = useAcceptAll(languageVersionId)
   const translate = useTranslate()
+  const tailor = useTailor()
   const [sourceId, setSourceId] = useState('')
+  const [tailorOpen, setTailorOpen] = useState(false)
+  const [jobDescription, setJobDescription] = useState('')
 
   const others = languages.filter((l) => l.id !== languageVersionId)
 
@@ -129,6 +133,18 @@ export function SuggestionPanel({
     }
   }
 
+  async function handleTailor() {
+    if (!jobDescription.trim()) return
+    try {
+      const result = await tailor.mutateAsync({ languageVersionId, jobDescription: jobDescription.trim() })
+      notify(`${result.length} ${t('ai.tailored')}`, 'success')
+      setTailorOpen(false)
+      void refetch()
+    } catch (e) {
+      notify(toastFromError(e, t('error.generic')), 'error')
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -151,7 +167,27 @@ export function SuggestionPanel({
           <SecondaryButton onClick={() => void handleTranslate()} disabled={!sourceId || translate.isPending}>
             {translate.isPending ? t('ai.translating') : `${t('ai.translateTo')} ${currentLanguageCode}`}
           </SecondaryButton>
+          <SecondaryButton onClick={() => setTailorOpen((v) => !v)}>
+            {t('ai.tailor')}
+          </SecondaryButton>
         </div>
+        {tailorOpen && (
+          <div className="mt-2 flex flex-col gap-2">
+            <textarea
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              rows={4}
+              placeholder={t('ai.jobDescriptionPh')}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+            <SecondaryButton
+              onClick={() => void handleTailor()}
+              disabled={!jobDescription.trim() || tailor.isPending}
+            >
+              {tailor.isPending ? t('ai.tailoring') : t('ai.tailorRun')}
+            </SecondaryButton>
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">

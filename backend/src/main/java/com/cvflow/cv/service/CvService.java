@@ -18,6 +18,7 @@ import com.cvflow.cv.model.CvSection;
 import com.cvflow.cv.model.RevisionDocumentType;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.repository.MasterCvRepository;
+import com.cvflow.billing.service.UsageService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class CvService {
     private final CvContentCloner cloner;
     private final SectionOrderValidator sectionOrderValidator;
     private final RevisionService revisionService;
+    private final UsageService usageService;
 
     @Transactional(readOnly = true)
     public List<CvSummaryResponse> list() {
@@ -51,8 +53,10 @@ public class CvService {
 
     @Transactional
     public CvResponse create(CreateCvRequest request) {
+        UUID userId = currentUserService.getCurrentUserId();
+        usageService.checkCvQuota(userId);
         MasterCv cv = new MasterCv();
-        cv.setUserId(currentUserService.getCurrentUserId());
+        cv.setUserId(userId);
         cv.setName(request.name());
         cv.setContent(CvContent.empty());
         cv.setSectionOrder(CvSection.defaultOrder());

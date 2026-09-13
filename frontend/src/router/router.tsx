@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import { Layout } from '../components/Layout'
 import { RequireAuth } from '../components/RequireAuth'
+import { CoverLetterEditorPage } from '../pages/CoverLetterEditorPage'
 import { CvEditorPage } from '../pages/CvEditorPage'
 import { CvListPage } from '../pages/CvListPage'
 import { DashboardPage } from '../pages/DashboardPage'
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: '/', element: protectedElement(<DashboardPage />) },
       { path: '/cvs', element: protectedElement(<CvListPage />) },
       { path: '/cvs/:cvId', element: protectedElement(<CvEditorPage />) },
+      { path: '/cvs/:cvId/cover-letters/:letterId', element: protectedElement(<CoverLetterEditorPage />) },
       { path: '/cvs/:cvId/languages/:languageId', element: protectedElement(<LanguageEditorPage />) },
     ],
   },

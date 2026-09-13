@@ -5,6 +5,8 @@ import { AiFieldButtons, SuggestionPanel } from '../features/ai/SuggestionPanel'
 import { CvDocumentEditor } from '../features/editor/CvDocumentEditor'
 import { useLanguage, useLanguages, useUpdateLanguage } from '../features/languages/languageApi'
 import { exportDocx, exportPdf } from '../features/pdf/pdfApi'
+import { AtsCard } from '../features/ats/AtsCard'
+import { ShareCard } from '../features/share/ShareCard'
 import { RevisionPanel } from '../features/revisions/RevisionPanel'
 import { useLanguageRevisions, useRestoreLanguageRevision } from '../features/revisions/revisionApi'
 import { useT } from '../i18n'
@@ -153,6 +155,11 @@ export function LanguageEditorPage() {
           void refetch()
         }}
       />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <AtsCard cvId={cvId} languageId={language.id} />
+        <ShareCard cvId={cvId} languageId={language.id} />
+      </div>
 
       <SuggestionPanel
         languageVersionId={language.id}

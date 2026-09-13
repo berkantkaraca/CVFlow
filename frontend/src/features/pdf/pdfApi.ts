@@ -8,3 +8,7 @@ export function exportPdf(cvId: string, languageCode: LanguageCode): Promise<voi
 export function exportDocx(cvId: string, languageCode: LanguageCode): Promise<void> {
   return apiDownload(`/cvs/${cvId}/export/docx`, { languageCode }, `cv-${languageCode.toLowerCase()}.docx`)
 }
+
+export function downloadPdf(path: string, filename: string): Promise<void> {
+  return apiDownload(path, undefined, filename)
+}

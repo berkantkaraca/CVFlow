@@ -11,4 +11,8 @@ public interface AiClient {
     String translate(String content, LanguageCode sourceLanguage, LanguageCode targetLanguage);
 
     CvContent translateContent(CvContent content, LanguageCode sourceLanguage, LanguageCode targetLanguage);
+
+    CvContent tailorContent(CvContent content, String jobDescription, LanguageCode language);
+
+    String generateCoverLetter(CvContent content, String jobDescription, LanguageCode language);
 }

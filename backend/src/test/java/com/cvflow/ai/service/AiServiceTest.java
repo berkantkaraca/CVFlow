@@ -22,6 +22,7 @@ import com.cvflow.common.exception.InvalidSuggestionStateException;
 import com.cvflow.common.exception.SuggestionNotFoundException;
 import com.cvflow.common.security.CvAccessService;
 import com.cvflow.cv.entity.CvLanguageVersion;
+import com.cvflow.cv.entity.MasterCv;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
 import com.cvflow.cv.model.Experience;
@@ -57,6 +58,9 @@ class AiServiceTest {
     @Mock
     private RevisionService revisionService;
 
+    @Mock
+    private com.cvflow.billing.service.UsageService usageService;
+
     private AiService service;
     private final UUID versionId = UUID.randomUUID();
     private final UUID suggestionId = UUID.randomUUID();
@@ -72,7 +76,11 @@ class AiServiceTest {
                 new CvFieldValidator(),
                 new SuggestionApplier(),
                 new CvContentDiffer(),
-                revisionService);
+                revisionService,
+                usageService);
+        org.mockito.Mockito.lenient()
+                .when(cvAccessService.getOwnedCv(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(i -> masterCv(UUID.randomUUID()));
     }
 
     @Test
@@ -150,6 +158,46 @@ class AiServiceTest {
         when(suggestionRepository.findById(suggestionId)).thenReturn(Optional.empty());
 
         assertThrows(SuggestionNotFoundException.class, () -> service.accept(suggestionId));
+    }
+
+    @Test
+    void tailorCreatesTailorSuggestions() {
+        CvLanguageVersion version = languageVersion();
+        when(cvAccessService.getOwnedLanguageVersion(versionId)).thenReturn(version);
+        when(cvAccessService.getOwnedCv(version.getMasterCvId())).thenReturn(masterCv(version.getMasterCvId()));
+        CvContent tailored = CvContent.empty();
+        tailored.setSummary("Tailored summary");
+        when(aiClient.tailorContent(any(), any(), any())).thenReturn(tailored);
+        when(suggestionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        var suggestions = service.tailor(new com.cvflow.ai.dto.TailorRequest(versionId, "Hiring Java devs"));
+
+        assertEquals(1, suggestions.size());
+        assertEquals(AiOperation.TAILOR, suggestions.get(0).operation());
+    }
+
+    @Test
+    void generateCoverLetterReturnsDraftWithoutPersisting() {
+        MasterCv master = masterCv(UUID.randomUUID());
+        when(cvAccessService.getOwnedCv(master.getId())).thenReturn(master);
+        when(aiClient.generateCoverLetter(any(), any(), any())).thenReturn("Dear team,");
+
+        var draft = service.generateCoverLetter(
+                new com.cvflow.ai.dto.CoverLetterRequest(master.getId(), LanguageCode.EN, "JD"));
+
+        assertEquals("Dear team,", draft.body());
+        verify(suggestionRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    private MasterCv masterCv(UUID id) {
+        MasterCv cv = new MasterCv();
+        cv.setId(id);
+        cv.setUserId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        cv.setName("CV");
+        cv.setContent(CvContent.empty());
+        cv.setSectionOrder(CvSection.defaultOrder());
+        cv.setVersion(0L);
+        return cv;
     }
 
     @Test

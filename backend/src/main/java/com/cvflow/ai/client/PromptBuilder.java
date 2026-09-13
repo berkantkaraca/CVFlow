@@ -73,8 +73,7 @@ public class PromptBuilder {    private static final String RULES =
                 """.formatted(sourceLanguage, targetLanguage, contentJson, RULES);
     }
 
-    public String correction(String original, String badSuggestion, String violations) {
-        return """
+    public String correction(String original, String badSuggestion, String violations) {        return """
                 Your previous response violated the rules in the ways listed below.
                 Produce a corrected response that keeps every factual detail identical
                 to the original text. Change wording only.
@@ -90,5 +89,47 @@ public class PromptBuilder {    private static final String RULES =
 
                 %s
                 """.formatted(violations, original, badSuggestion, RULES);
+    }
+
+    public String tailorContent(String contentJson, String jobDescription, LanguageCode language) {
+        return """
+                Rewrite the human-readable string values in the following CV JSON document so the CV
+                better matches the job description below. Emphasize relevant experience and skills
+                that are already present. Never invent facts, technologies, metrics or dates.
+                Keep all JSON keys, the document structure and every id value exactly as they are.
+                Rewrite only the human-readable string values.
+                Return the full rewritten JSON document and nothing else.
+                Write the output in %s.
+
+                Job description:
+                %s
+
+                CV JSON:
+                %s
+
+                %s
+                """.formatted(language, jobDescription, contentJson, RULES);
+    }
+
+    public String coverLetter(String contentJson, String jobDescription, LanguageCode language) {
+        return """
+                Write a professional cover letter body (3-4 short paragraphs, no header, no signature)
+                for the candidate described in the CV JSON below, in %s.
+                %s
+                Never invent facts, technologies, metrics or dates. Only use information present
+                in the CV. Keep it concise and specific to the candidate's real background.
+                Return structured JSON only, matching the required schema.
+
+                CV JSON:
+                %s
+
+                %s
+                """.formatted(
+                language,
+                jobDescription == null || jobDescription.isBlank()
+                        ? "No specific job description was provided; write a general letter."
+                        : "Tailor the letter to the following job description:\n" + jobDescription,
+                contentJson,
+                RULES);
     }
 }

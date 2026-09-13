@@ -41,6 +41,9 @@ class LanguageVersionControllerTest {
     @MockitoBean
     private LanguageVersionService languageVersionService;
 
+    @MockitoBean
+    private com.cvflow.cv.service.AtsService atsService;
+
     private final UUID cvId = UUID.randomUUID();
     private final UUID versionId = UUID.randomUUID();
 
@@ -123,6 +126,16 @@ class LanguageVersionControllerTest {
                         .content("{\"version\":5}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void atsScoreReturns200() throws Exception {
+        when(atsService.score(cvId, versionId))
+                .thenReturn(new com.cvflow.cv.dto.response.AtsScoreResponse(80, java.util.List.of()));
+
+        mvc.perform(get("/api/v1/cvs/" + cvId + "/languages/" + versionId + "/ats-score"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.score").value(80));
     }
 
     private LanguageVersionResponse sampleResponse() {

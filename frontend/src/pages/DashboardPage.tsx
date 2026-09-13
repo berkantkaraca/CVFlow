@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { useCvs } from '../features/cvs/cvApi'
+import { UsageCard } from '../features/billing/UsageCard'
 import { useT } from '../i18n'
 
 export function DashboardPage() {
@@ -30,6 +31,7 @@ export function DashboardPage() {
           {t('dashboard.manage')}
         </Link>
       </div>
+      <UsageCard />
       {cvs && cvs.length > 0 && (
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <h2 className="mb-2 font-semibold">{t('dashboard.recent')}</h2>

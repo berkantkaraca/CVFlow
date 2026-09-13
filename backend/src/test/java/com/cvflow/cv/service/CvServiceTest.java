@@ -46,6 +46,9 @@ class CvServiceTest {
     private RevisionService revisionService;
 
     @Mock
+    private com.cvflow.billing.service.UsageService usageService;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @Mock
@@ -64,7 +67,8 @@ class CvServiceTest {
                 cvAccessService,
                 new CvContentCloner(new ObjectMapper()),
                 new SectionOrderValidator(),
-                revisionService);
+                revisionService,
+                usageService);
         lenient().when(currentUserService.getCurrentUserId()).thenReturn(userId);
     }
 
