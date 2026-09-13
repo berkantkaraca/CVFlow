@@ -7,8 +7,13 @@ import org.springframework.stereotype.Component;
 public class PromptBuilder {    private static final String RULES =
             """
             Rules:
-            - Never invent facts, technologies, companies, responsibilities, achievements, metrics or dates.
+            - Never invent facts, technologies, tools, companies, products, responsibilities,
+              achievements, metrics, numbers, percentages, dates or proper nouns.
+            - Every number, percentage, date and proper noun in the output must appear
+              verbatim in the input. If the input has no numbers, the output must have none.
             - Never change factual information. Preserve meaning.
+            - Change as few words as possible while achieving the goal.
+            - If the input is short, keep the output short. Do not pad with invented detail.
             - Use professional CV language. Keep output concise.
             - Do not add explanations.
             - Return structured JSON only, matching the required schema.
@@ -66,5 +71,24 @@ public class PromptBuilder {    private static final String RULES =
 
                 %s
                 """.formatted(sourceLanguage, targetLanguage, contentJson, RULES);
+    }
+
+    public String correction(String original, String badSuggestion, String violations) {
+        return """
+                Your previous response violated the rules in the ways listed below.
+                Produce a corrected response that keeps every factual detail identical
+                to the original text. Change wording only.
+
+                Violations:
+                %s
+
+                Original text:
+                %s
+
+                Rejected response:
+                %s
+
+                %s
+                """.formatted(violations, original, badSuggestion, RULES);
     }
 }

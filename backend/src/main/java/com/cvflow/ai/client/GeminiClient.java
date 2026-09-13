@@ -17,20 +17,21 @@ public class GeminiClient implements AiClient {
     private final GeminiProperties properties;
     private final ObjectMapper objectMapper;
     private final PromptBuilder promptBuilder;
+    private final AiOutputValidator outputValidator;
 
     @Override
     public String improve(String content) {
-        return generate(promptBuilder.improve(content));
+        return generate(promptBuilder.improve(content), content);
     }
 
     @Override
     public String rewrite(String content) {
-        return generate(promptBuilder.rewrite(content));
+        return generate(promptBuilder.rewrite(content), content);
     }
 
     @Override
     public String translate(String content, LanguageCode sourceLanguage, LanguageCode targetLanguage) {
-        return generate(promptBuilder.translate(content, sourceLanguage, targetLanguage));
+        return generate(promptBuilder.translate(content, sourceLanguage, targetLanguage), content);
     }
 
     @Override
@@ -57,8 +58,24 @@ public class GeminiClient implements AiClient {
         }
     }
 
-    private String generate(String prompt) {
-        String text = generateText(GeminiApi.Request.of(prompt));
+    private String generate(String prompt, String original) {
+        String suggested = parseSuggested(generateText(GeminiApi.Request.of(prompt)));
+        var violation = outputValidator.violation(original, suggested);
+        if (violation.isEmpty()) {
+            return suggested;
+        }
+        String retry = parseSuggested(generateText(GeminiApi.Request.of(
+                promptBuilder.correction(original, suggested, violation.get()))));
+        var retryViolation = outputValidator.violation(original, retry);
+        if (retryViolation.isEmpty()) {
+            return retry;
+        }
+        throw new AiServiceException(
+                "AI_UNRELIABLE_RESPONSE",
+                "AI produced unreliable content (invented details). Please try again.");
+    }
+
+    private String parseSuggested(String text) {
         try {
             GeminiApi.SuggestedText parsed = objectMapper.readValue(text, GeminiApi.SuggestedText.class);
             if (parsed.suggested() == null || parsed.suggested().isBlank()) {

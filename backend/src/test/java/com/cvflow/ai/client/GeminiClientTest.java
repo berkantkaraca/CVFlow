@@ -23,14 +23,16 @@ class GeminiClientTest {
     private GeminiClient client;
     private volatile int status = 200;
     private volatile String body = geminiBody("{\"suggested\":\"Improved text\"}");
+    private volatile String retryBody;
     private final AtomicInteger calls = new AtomicInteger();
 
     @BeforeEach
     void setup() throws IOException {
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/", exchange -> {
-            calls.incrementAndGet();
-            byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+            int call = calls.getAndIncrement();
+            String responseBody = call == 0 || retryBody == null ? body : retryBody;
+            byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(status, bytes.length);
             try (OutputStream out = exchange.getResponseBody()) {
@@ -43,7 +45,8 @@ class GeminiClientTest {
                 RestClient.builder().build(),
                 new com.cvflow.ai.config.GeminiProperties("test-key", "gemini-2.5-flash", baseUrl),
                 new ObjectMapper(),
-                new PromptBuilder());
+                new PromptBuilder(),
+                new AiOutputValidator());
     }
 
     @AfterEach
@@ -87,6 +90,25 @@ class GeminiClientTest {
         AiServiceException ex = assertThrows(AiServiceException.class, () -> client.improve("x"));
         assertEquals("AI_SERVICE_ERROR", ex.getCode());
         assertTrue(ex.getMessage().contains("failed"));
+    }
+
+    @Test
+    void retriesOnceWhenSuggestionInventsNumbers() {
+        body = geminiBody("{\"suggested\":\"Improved text, 30% faster for 100K users\"}");
+        retryBody = geminiBody("{\"suggested\":\"Improved text\"}");
+
+        assertEquals("Improved text", client.improve("Original text"));
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void failsWhenRetryAlsoInventsNumbers() {
+        body = geminiBody("{\"suggested\":\"Faster by 30%\"}");
+        retryBody = geminiBody("{\"suggested\":\"Faster by 40%\"}");
+
+        AiServiceException ex = assertThrows(AiServiceException.class, () -> client.improve("Original text"));
+        assertEquals("AI_UNRELIABLE_RESPONSE", ex.getCode());
+        assertEquals(2, calls.get());
     }
 
     @Test
