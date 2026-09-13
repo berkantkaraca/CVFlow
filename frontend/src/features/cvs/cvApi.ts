@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiDelete, apiGet, apiPost, apiPut } from '../../api/client'
+import { apiDelete, apiDeleteJson, apiGet, apiPost, apiPut } from '../../api/client'
 import type { CvContent, CvDetail, CvSection, CvSummary } from '../../types/cv'
 
 export interface CreateCvInput {
@@ -45,10 +45,23 @@ export function useUpdateCv(id: string) {
   })
 }
 
+export interface BulkDeleteResult {
+  deleted: string[]
+  failed: { id: string; code: string }[]
+}
+
 export function useDeleteCv() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => apiDelete(`/cvs/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cvKeys.all }),
+  })
+}
+
+export function useBulkDeleteCvs() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => apiDeleteJson<BulkDeleteResult>('/cvs', { ids }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: cvKeys.all }),
   })
 }

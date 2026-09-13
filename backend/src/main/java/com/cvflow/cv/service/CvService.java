@@ -3,9 +3,11 @@ package com.cvflow.cv.service;
 import com.cvflow.common.exception.OptimisticLockException;
 import com.cvflow.common.security.CvAccessService;
 import com.cvflow.common.security.CurrentUserService;
+import com.cvflow.cv.dto.request.BulkDeleteRequest;
 import com.cvflow.cv.dto.request.CreateCvRequest;
 import com.cvflow.cv.dto.request.RestoreRevisionRequest;
 import com.cvflow.cv.dto.request.UpdateCvRequest;
+import com.cvflow.cv.dto.response.BulkDeleteResponse;
 import com.cvflow.cv.dto.response.CvResponse;
 import com.cvflow.cv.dto.response.CvSummaryResponse;
 import com.cvflow.cv.dto.response.RevisionResponse;
@@ -16,12 +18,16 @@ import com.cvflow.cv.mapper.CvMapper;
 import com.cvflow.cv.model.CvContent;
 import com.cvflow.cv.model.CvSection;
 import com.cvflow.cv.model.RevisionDocumentType;
+import com.cvflow.cv.repository.CvContentRevisionRepository;
 import com.cvflow.cv.repository.CvLanguageVersionRepository;
 import com.cvflow.cv.repository.MasterCvRepository;
 import com.cvflow.billing.service.UsageService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +43,7 @@ public class CvService {
     private final SectionOrderValidator sectionOrderValidator;
     private final RevisionService revisionService;
     private final UsageService usageService;
+    private final CvContentRevisionRepository revisionRepository;
 
     @Transactional(readOnly = true)
     public List<CvSummaryResponse> list() {
@@ -82,6 +89,31 @@ public class CvService {
         MasterCv cv = cvAccessService.getOwnedCv(cvId);
         revisionService.deleteAll(RevisionDocumentType.MASTER_CV, cvId);
         masterCvRepository.delete(cv);
+    }
+
+    @Transactional
+    public BulkDeleteResponse bulkDelete(BulkDeleteRequest request) {
+        UUID userId = currentUserService.getCurrentUserId();
+        List<UUID> ids = request.ids().stream().distinct().toList();
+        Map<UUID, MasterCv> found = masterCvRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(MasterCv::getId, Function.identity(), (a, b) -> a));
+        List<UUID> deleted = new ArrayList<>();
+        List<BulkDeleteResponse.FailedItem> failed = new ArrayList<>();
+        for (UUID cvId : ids) {
+            MasterCv cv = found.get(cvId);
+            if (cv == null) {
+                failed.add(new BulkDeleteResponse.FailedItem(cvId, "CV_NOT_FOUND"));
+            } else if (!cv.getUserId().equals(userId)) {
+                failed.add(new BulkDeleteResponse.FailedItem(cvId, "ACCESS_DENIED"));
+            } else {
+                deleted.add(cvId);
+            }
+        }
+        if (!deleted.isEmpty()) {
+            revisionRepository.deleteByDocumentTypeAndDocumentIdIn(RevisionDocumentType.MASTER_CV, deleted);
+            masterCvRepository.deleteAllByIdInBatch(deleted);
+        }
+        return new BulkDeleteResponse(deleted, failed);
     }
 
     @Transactional

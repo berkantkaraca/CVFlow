@@ -3,6 +3,7 @@ package com.cvflow.cv.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -121,6 +122,20 @@ class CvControllerTest {
                                 "{\"name\":\"CV\",\"content\":{\"experiences\":[{\"company\":\"Acme\"}]},\"sectionOrder\":[\"SUMMARY\"],\"version\":5}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void bulkDeleteReturnsSummary() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(cvService.bulkDelete(any()))
+                .thenReturn(new com.cvflow.cv.dto.response.BulkDeleteResponse(List.of(id), List.of()));
+
+        mvc.perform(delete("/api/v1/cvs")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ids\":[\"" + id + "\"]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.deleted.length()").value(1));
     }
 
     private CvResponse sampleResponse() {

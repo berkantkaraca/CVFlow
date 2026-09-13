@@ -6,7 +6,7 @@ import { Dialog } from '../components/Dialog'
 import { ConfirmDialog, IconButton } from '../components/ConfirmDialog'
 import { DangerButton, Field, PrimaryButton, SecondaryButton, TextInput } from '../components/ui'
 import { DuplicateIcon, PencilIcon, TrashIcon } from '../components/icons'
-import { useCreateCv, useCvs, useDeleteCv, useDuplicateCv } from '../features/cvs/cvApi'
+import { useBulkDeleteCvs, useCreateCv, useCvs, useDeleteCv, useDuplicateCv } from '../features/cvs/cvApi'
 import { downloadBackup, useImportBackup } from '../features/backup/backupApi'
 import { useT } from '../i18n'
 import { toastFromError, useUiStore } from '../stores/uiStore'
@@ -18,6 +18,7 @@ export function CvListPage() {
   const { data: cvs, isLoading, refetch } = useCvs()
   const createCv = useCreateCv()
   const deleteCv = useDeleteCv()
+  const bulkDelete = useBulkDeleteCvs()
   const duplicateCv = useDuplicateCv()
   const importBackup = useImportBackup()
   const notify = useUiStore((s) => s.notify)
@@ -65,21 +66,21 @@ export function CvListPage() {
 
   async function onBulkDelete() {
     setBulkDeleting(true)
-    let ok = 0
-    for (const id of selected) {
-      try {
-        await deleteCv.mutateAsync(id)
-        ok++
-      } catch {
-        /* continue with the rest, report below */
-      }
+    try {
+      const result = await bulkDelete.mutateAsync(selected)
+      setBulkDeleting(false)
+      setBulkConfirmOpen(false)
+      setSelected([])
+      if (result.failed.length === 0) notify(t('cvlist.deletedCount').replace('{n}', String(result.deleted.length)), 'info')
+      else
+        notify(
+          t('cvlist.bulkPartial').replace('{ok}', String(result.deleted.length)).replace('{n}', String(selected.length)),
+          'error',
+        )
+    } catch (e) {
+      setBulkDeleting(false)
+      notify(toastFromError(e, t('error.generic')), 'error')
     }
-    setBulkDeleting(false)
-    setBulkConfirmOpen(false)
-    setSelected([])
-    void refetch()
-    if (ok === selected.length) notify(t('cvlist.deletedCount').replace('{n}', String(ok)), 'info')
-    else notify(`${t('cvlist.deletedCount').replace('{n}', String(ok))} — ${t('error.generic')}`, 'error')
   }
 
   function toggleSelect(id: string) {

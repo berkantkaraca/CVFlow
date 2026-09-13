@@ -49,6 +49,9 @@ class CvServiceTest {
     private com.cvflow.billing.service.UsageService usageService;
 
     @Mock
+    private com.cvflow.cv.repository.CvContentRevisionRepository revisionContentRepository;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @Mock
@@ -68,7 +71,8 @@ class CvServiceTest {
                 new CvContentCloner(new ObjectMapper()),
                 new SectionOrderValidator(),
                 revisionService,
-                usageService);
+                usageService,
+                revisionContentRepository);
         lenient().when(currentUserService.getCurrentUserId()).thenReturn(userId);
     }
 
@@ -177,6 +181,25 @@ class CvServiceTest {
 
         assertEquals("old summary", restored.content().getSummary());
         verify(revisionService).captureMaster(cv);
+    }
+
+    @Test
+    void bulkDeleteReportsPerItemResults() {
+        UUID missing = UUID.randomUUID();
+        UUID foreignId = UUID.randomUUID();
+        MasterCv mine = ownedCv(0L);
+        MasterCv foreign = ownedCv(0L);
+        foreign.setId(foreignId);
+        foreign.setUserId(UUID.randomUUID());
+        when(masterCvRepository.findAllById(any())).thenReturn(List.of(mine, foreign));
+
+        var result = cvService.bulkDelete(new com.cvflow.cv.dto.request.BulkDeleteRequest(List.of(cvId, missing, foreignId)));
+
+        assertEquals(List.of(cvId), result.deleted());
+        assertEquals(2, result.failed().size());
+        assertEquals("CV_NOT_FOUND", result.failed().get(0).code());
+        assertEquals("ACCESS_DENIED", result.failed().get(1).code());
+        verify(masterCvRepository).deleteAllByIdInBatch(List.of(cvId));
     }
 
     private MasterCv ownedCv(long version) {

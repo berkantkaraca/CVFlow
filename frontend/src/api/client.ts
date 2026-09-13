@@ -72,8 +72,24 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   )
 }
 
-export async function apiDelete(path: string): Promise<void> {
-  await parseJson<unknown>(await fetch(`${BASE_URL}${path}`, { method: 'DELETE', headers: authHeaders() }))
+export async function apiDelete(path: string, body?: unknown): Promise<void> {
+  await parseJson<unknown>(
+    await fetch(`${BASE_URL}${path}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  )
+}
+
+export async function apiDeleteJson<T>(path: string, body: unknown): Promise<T> {
+  return parseJson<T>(
+    await fetch(`${BASE_URL}${path}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(body),
+    }),
+  )
 }
 
 export async function apiDownload(path: string, body: unknown, filename: string): Promise<void> {

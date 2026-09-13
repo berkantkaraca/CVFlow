@@ -2,9 +2,11 @@ package com.cvflow.cv.controller;
 
 import com.cvflow.common.response.ApiResponse;
 import com.cvflow.common.response.ApiResponses;
+import com.cvflow.cv.dto.request.BulkDeleteRequest;
 import com.cvflow.cv.dto.request.CreateCvRequest;
 import com.cvflow.cv.dto.request.RestoreRevisionRequest;
 import com.cvflow.cv.dto.request.UpdateCvRequest;
+import com.cvflow.cv.dto.response.BulkDeleteResponse;
 import com.cvflow.cv.dto.response.CvResponse;
 import com.cvflow.cv.dto.response.CvSummaryResponse;
 import com.cvflow.cv.dto.response.RevisionResponse;
@@ -55,6 +57,12 @@ public class CvController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID cvId) {
         cvService.delete(cvId);
         return ResponseEntity.ok(ApiResponses.success());
+    }
+
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<BulkDeleteResponse>> bulkDelete(
+            @Valid @RequestBody BulkDeleteRequest request) {
+        return ResponseEntity.ok(ApiResponses.success(cvService.bulkDelete(request)));
     }
 
     @PostMapping("/{cvId}/duplicate")
