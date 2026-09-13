@@ -3,7 +3,9 @@ import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { z } from 'zod'
 import { Dialog } from '../components/Dialog'
-import { DangerButton, Field, PrimaryButton, SecondaryButton, TextInput } from '../components/ui'
+import { ConfirmDialog, IconButton } from '../components/ConfirmDialog'
+import { Field, PrimaryButton, SecondaryButton, TextInput } from '../components/ui'
+import { DuplicateIcon, PencilIcon, TrashIcon } from '../components/icons'
 import { useCreateCv, useCvs, useDeleteCv, useDuplicateCv } from '../features/cvs/cvApi'
 import { downloadBackup, useImportBackup } from '../features/backup/backupApi'
 import { useT } from '../i18n'
@@ -21,6 +23,7 @@ export function CvListPage() {
   const notify = useUiStore((s) => s.notify)
   const t = useT()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const {
     register,
@@ -45,11 +48,12 @@ export function CvListPage() {
     }
   }
 
-  async function onDelete(id: string, name: string) {
-    if (!window.confirm(`${t('cvlist.confirmDelete')} "${name}"?`)) return
+  async function onDelete() {
+    if (!deleteTarget) return
     try {
-      await deleteCv.mutateAsync(id)
+      await deleteCv.mutateAsync(deleteTarget.id)
       notify(t('cvlist.deleted'), 'info')
+      setDeleteTarget(null)
     } catch (e) {
       notify(toastFromError(e, t('error.generic')), 'error')
     }
@@ -127,16 +131,21 @@ export function CvListPage() {
           <tbody>
             {(cvs ?? []).map((cv) => (
               <tr key={cv.id} className="border-t border-line">
-                <td className="px-4 py-2 font-medium">
-                  <Link to={`/cvs/${cv.id}`} className="text-accent-800 hover:underline">
-                    {cv.name}
-                  </Link>
-                </td>
+                <td className="px-4 py-2 font-medium text-ink-900">{cv.name}</td>
                 <td className="px-4 py-2 text-ink-500">{new Date(cv.updatedAt).toLocaleString()}</td>
                 <td className="px-4 py-2 text-ink-500">v{cv.version}</td>
-                <td className="flex justify-end gap-2 px-4 py-2">
-                  <SecondaryButton onClick={() => void onDuplicate(cv.id)}>{t('cvlist.duplicate')}</SecondaryButton>
-                  <DangerButton onClick={() => void onDelete(cv.id, cv.name)}>{t('common.delete')}</DangerButton>
+                <td className="px-4 py-2">
+                  <div className="flex justify-end gap-1">
+                    <Link to={`/cvs/${cv.id}`} className="rounded-lg p-2 text-ink-500 transition hover:bg-paper hover:text-ink-900" title={t('common.edit')} aria-label={t('common.edit')}>
+                      <PencilIcon />
+                    </Link>
+                    <IconButton title={t('common.duplicate')} onClick={() => void onDuplicate(cv.id)}>
+                      <DuplicateIcon />
+                    </IconButton>
+                    <IconButton title={t('common.delete')} danger onClick={() => setDeleteTarget({ id: cv.id, name: cv.name })}>
+                      <TrashIcon />
+                    </IconButton>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -146,6 +155,16 @@ export function CvListPage() {
           <p className="px-4 py-6 text-center text-sm text-ink-500">{t('cvlist.empty')}</p>
         )}
       </div>
+      {deleteTarget && (
+        <ConfirmDialog
+          title={t('confirm.deleteTitle')}
+          message={`${t('cvlist.confirmDelete')} "${deleteTarget.name}"?`}
+          confirmLabel={t('common.delete')}
+          pending={deleteCv.isPending}
+          onConfirm={() => void onDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
       {dialogOpen && (
         <Dialog title={t('cvlist.dialogTitle')} onClose={() => setDialogOpen(false)}>
           <form onSubmit={handleSubmit(onCreate)} className="flex flex-col gap-3">

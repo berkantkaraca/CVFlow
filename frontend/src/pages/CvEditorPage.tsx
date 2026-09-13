@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router'
 import { z } from 'zod'
 import { Dialog } from '../components/Dialog'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { DangerButton, Field, PrimaryButton, SecondaryButton, TextInput } from '../components/ui'
 import { CvDocumentEditor } from '../features/editor/CvDocumentEditor'
 import { useCv, useUpdateCv } from '../features/cvs/cvApi'
@@ -45,6 +46,8 @@ export function CvEditorPage() {
   const createLanguage = useCreateLanguage(cvId)
   const deleteLanguage = useDeleteLanguage(cvId)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteLanguageTarget, setDeleteLanguageTarget] = useState<{ id: string; name: string } | null>(null)
+  const [deleteLetterTarget, setDeleteLetterTarget] = useState<{ id: string; title: string } | null>(null)
   const [previewTemplate, setPreviewTemplate] = useState<TemplateCode>('MODERN')
   const {
     register,
@@ -67,11 +70,12 @@ export function CvEditorPage() {
     }
   }
 
-  async function onDeleteLanguage(id: string, name: string) {
-    if (!window.confirm(`${t('cvlist.confirmDelete')} "${name}"?`)) return
+  async function onDeleteLanguage() {
+    if (!deleteLanguageTarget) return
     try {
-      await deleteLanguage.mutateAsync(id)
+      await deleteLanguage.mutateAsync(deleteLanguageTarget.id)
       notify(t('editor.langDeleted'), 'info')
+      setDeleteLanguageTarget(null)
     } catch (e) {
       notify(toastFromError(e, t('error.generic')), 'error')
     }
@@ -86,11 +90,12 @@ export function CvEditorPage() {
     }
   }
 
-  async function onDeleteLetter(id: string, title: string) {
-    if (!window.confirm(`${t('letter.confirmDelete')} "${title}"?`)) return
+  async function onDeleteLetter() {
+    if (!deleteLetterTarget) return
     try {
-      await deleteLetter.mutateAsync(id)
+      await deleteLetter.mutateAsync(deleteLetterTarget.id)
       notify(t('letter.deleted'), 'info')
+      setDeleteLetterTarget(null)
     } catch (e) {
       notify(toastFromError(e, t('error.generic')), 'error')
     }
@@ -169,7 +174,7 @@ export function CvEditorPage() {
                 {l.name}
               </Link>
               <span className="text-ink-300">{l.templateCode}</span>
-              <DangerButton onClick={() => void onDeleteLanguage(l.id, l.name)} className="ml-auto">
+              <DangerButton onClick={() => setDeleteLanguageTarget({ id: l.id, name: l.name })} className="ml-auto">
                 {t('common.delete')}
               </DangerButton>
             </li>
@@ -193,7 +198,7 @@ export function CvEditorPage() {
               <Link to={`/cvs/${cvId}/cover-letters/${l.id}`} className="font-medium text-accent-800 hover:underline">
                 {l.title}
               </Link>
-              <DangerButton onClick={() => void onDeleteLetter(l.id, l.title)} className="ml-auto">
+              <DangerButton onClick={() => setDeleteLetterTarget({ id: l.id, title: l.title })} className="ml-auto">
                 {t('common.delete')}
               </DangerButton>
             </li>
@@ -204,6 +209,26 @@ export function CvEditorPage() {
         )}
       </div>
 
+      {deleteLanguageTarget && (
+        <ConfirmDialog
+          title={t('confirm.deleteTitle')}
+          message={`${t('editor.confirmDeleteLang')} "${deleteLanguageTarget.name}"?`}
+          confirmLabel={t('common.delete')}
+          pending={deleteLanguage.isPending}
+          onConfirm={() => void onDeleteLanguage()}
+          onCancel={() => setDeleteLanguageTarget(null)}
+        />
+      )}
+      {deleteLetterTarget && (
+        <ConfirmDialog
+          title={t('confirm.deleteTitle')}
+          message={`${t('letter.confirmDelete')} "${deleteLetterTarget.title}"?`}
+          confirmLabel={t('common.delete')}
+          pending={deleteLetter.isPending}
+          onConfirm={() => void onDeleteLetter()}
+          onCancel={() => setDeleteLetterTarget(null)}
+        />
+      )}
       {dialogOpen && (
         <Dialog title={t('editor.newLangTitle')} onClose={() => setDialogOpen(false)}>
           <form onSubmit={handleSubmit(onCreateLanguage)} className="flex flex-col gap-3">

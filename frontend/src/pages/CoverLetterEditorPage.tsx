@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { DangerButton, Field, PrimaryButton, SecondaryButton, TextArea, TextInput } from '../components/ui'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { useCoverLetterDraft } from '../features/ai/tailorApi'
 import {
   exportCoverLetterPdf,
@@ -27,6 +28,7 @@ export function CoverLetterEditorPage() {
   const [jobDescription, setJobDescription] = useState('')
   const [draftBody, setDraftBody] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (letter && initializedFor !== `${letter.id}:${letter.version}`) {
     setForm({
@@ -74,7 +76,6 @@ export function CoverLetterEditorPage() {
   }
 
   async function onDelete() {
-    if (!window.confirm(t('letter.confirmDelete'))) return
     try {
       await deleteLetter.mutateAsync(letterId)
       notify(t('letter.deleted'), 'info')
@@ -151,11 +152,21 @@ export function CoverLetterEditorPage() {
           <SecondaryButton onClick={() => void onExport()} disabled={exporting}>
             {exporting ? t('editor.exporting') : t('letter.exportPdf')}
           </SecondaryButton>
-          <DangerButton onClick={() => void onDelete()} className="ml-auto">
+          <DangerButton onClick={() => setConfirmDelete(true)} className="ml-auto">
             {t('common.delete')}
           </DangerButton>
         </div>
       </div>
+      {confirmDelete && (
+        <ConfirmDialog
+          title={t('confirm.deleteTitle')}
+          message={`${t('letter.confirmDelete')}`}
+          confirmLabel={t('common.delete')}
+          pending={deleteLetter.isPending}
+          onConfirm={() => void onDelete()}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
 
       <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">
         <h2 className="mb-2 font-semibold text-violet-800">{t('letter.aiTitle')}</h2>
