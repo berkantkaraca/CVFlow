@@ -103,7 +103,11 @@ docker compose up -d --build
 PostgreSQL with Flyway migrations (`backend/src/main/resources/db/migration`).
 Hibernate `ddl-auto: validate` — schema changes only via Flyway.
 Tables: `users`, `master_cvs` (JSONB `content` + `section_order`), `cv_language_versions`
-(UNIQUE per master+language), `cv_ai_suggestions`.
+(UNIQUE per master+language), `cv_ai_suggestions`, `cv_content_revisions`.
+
+Backups (`GET /api/v1/backup/export`) contain Master CVs with content, section order and
+language versions (names, templates). AI suggestions and content revisions are transient
+state and are not included; import always creates fresh rows.
 
 A demo user is seeded by migration V1 (`demo@cvsaas.local`, no password — cannot log in).
 Register via `POST /api/v1/auth/register`, then log in via `POST /api/v1/auth/login`.
@@ -141,6 +145,9 @@ POST   /api/v1/ai/suggestions/accept-all    apply all PENDING (one transaction)
 
 POST   /api/v1/cvs/{cvId}/export/pdf        { languageCode } → application/pdf
 POST   /api/v1/cvs/{cvId}/export/docx       { languageCode } → Word document (.docx)
+
+GET    /api/v1/backup/export                download cvflow-backup.json (all CVs + languages)
+POST   /api/v1/backup/import                restore from backup (fresh IDs, one transaction)
 ```
 
 Error codes: `VALIDATION_ERROR`, `INVALID_FIELD`, `INVALID_SECTION_ORDER`, `INVALID_JSON`,
